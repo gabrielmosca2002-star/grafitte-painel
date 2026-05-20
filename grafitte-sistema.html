@@ -1,0 +1,1219 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Grafitte — Sistema de Produção</title>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=DM+Sans:wght@300;400;500;600&family=DM+Mono:wght@400;500&display=swap');
+:root {
+  --bg:#0f0f0f; --bg2:#181818; --bg3:#222; --border:#2a2a2a; --border2:#333;
+  --text:#e8e8e8; --muted:#888; --faint:#444;
+  --accent:#00e5a0; --accent2:#00b87a; --warn:#f59e0b; --danger:#ef4444;
+  --info:#3b82f6; --purple:#a78bfa; --pink:#f472b6; --orange:#fb923c;
+  --font:'DM Sans',sans-serif; --mono:'DM Mono',monospace;
+}
+*{box-sizing:border-box;margin:0;padding:0}
+body{background:var(--bg);color:var(--text);font-family:var(--font);font-size:14px;line-height:1.5;min-height:100vh}
+.app{display:flex;min-height:100vh}
+.sidebar{width:220px;background:var(--bg2);border-right:1px solid var(--border);display:flex;flex-direction:column;position:fixed;height:100vh;z-index:10;overflow-y:auto}
+.main{margin-left:220px;flex:1;padding:24px 28px}
+.sidebar-logo{padding:20px 18px 14px;border-bottom:1px solid var(--border)}
+.sidebar-logo .brand{font-size:15px;font-weight:600;color:var(--accent);letter-spacing:-.3px}
+.sidebar-logo .sub{font-size:11px;color:var(--muted);margin-top:2px}
+.sidebar-nav{padding:10px 8px;flex:1}
+.nav-item{display:flex;align-items:center;gap:9px;padding:8px 10px;border-radius:7px;cursor:pointer;color:var(--muted);font-size:13px;font-weight:500;transition:all .15s;margin-bottom:2px;border:none;background:none;width:100%;text-align:left}
+.nav-item:hover{background:var(--bg3);color:var(--text)}
+.nav-item.active{background:rgba(0,229,160,.1);color:var(--accent)}
+.nav-item .icon{font-size:15px;width:17px;text-align:center}
+.nav-section{font-size:10px;color:var(--faint);letter-spacing:.8px;text-transform:uppercase;padding:12px 10px 5px}
+.badge-nav{margin-left:auto;font-size:10px;font-weight:600;padding:1px 6px;border-radius:10px;font-family:var(--mono)}
+.badge-nav.red{background:var(--danger);color:#fff}
+.badge-nav.green{background:var(--accent2);color:#000}
+.badge-nav.warn{background:var(--warn);color:#000}
+.badge-nav.purple{background:var(--purple);color:#000}
+
+/* topbar */
+.topbar{display:flex;align-items:center;justify-content:space-between;margin-bottom:22px}
+.topbar h1{font-size:19px;font-weight:600;letter-spacing:-.4px}
+.topbar-right{display:flex;gap:10px;align-items:center}
+
+/* buttons */
+.btn{display:inline-flex;align-items:center;gap:6px;padding:7px 14px;border-radius:7px;font-family:var(--font);font-size:13px;font-weight:500;cursor:pointer;transition:all .15s;border:none}
+.btn-primary{background:var(--accent);color:#000}
+.btn-primary:hover{background:var(--accent2)}
+.btn-primary:disabled{opacity:.4;cursor:not-allowed}
+.btn-ghost{background:var(--bg3);color:var(--text);border:1px solid var(--border2)}
+.btn-ghost:hover{border-color:var(--faint)}
+.btn-danger{background:rgba(239,68,68,.15);color:var(--danger);border:1px solid rgba(239,68,68,.3)}
+.btn-warn{background:rgba(245,158,11,.15);color:var(--warn);border:1px solid rgba(245,158,11,.3)}
+.btn-purple{background:rgba(167,139,250,.15);color:var(--purple);border:1px solid rgba(167,139,250,.3)}
+.btn-sm{padding:5px 10px;font-size:12px}
+
+/* stats */
+.stats{display:grid;grid-template-columns:repeat(5,1fr);gap:12px;margin-bottom:22px}
+.stat-card{background:var(--bg2);border:1px solid var(--border);border-radius:10px;padding:14px 16px}
+.stat-label{font-size:11px;color:var(--muted);text-transform:uppercase;letter-spacing:.5px;margin-bottom:6px}
+.stat-value{font-size:24px;font-weight:600;font-family:var(--mono);letter-spacing:-1px}
+.stat-value.accent{color:var(--accent)}
+.stat-value.warn{color:var(--warn)}
+.stat-value.danger{color:var(--danger)}
+.stat-value.info{color:var(--info)}
+.stat-value.purple{color:var(--purple)}
+.stat-sub{font-size:11px;color:var(--muted);margin-top:3px}
+
+/* card */
+.card{background:var(--bg2);border:1px solid var(--border);border-radius:10px}
+.card-header{padding:14px 18px;border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between}
+.card-title{font-size:13px;font-weight:600}
+
+/* table */
+.table{width:100%;border-collapse:collapse}
+.table th{font-size:11px;color:var(--muted);text-transform:uppercase;letter-spacing:.5px;padding:9px 16px;text-align:left;border-bottom:1px solid var(--border);font-weight:500;white-space:nowrap}
+.table td{padding:11px 16px;border-bottom:1px solid var(--border);vertical-align:middle}
+.table tr:last-child td{border-bottom:none}
+.table tbody tr:hover{background:rgba(255,255,255,.02)}
+
+/* day group */
+.day-group{margin-bottom:24px}
+.day-header{display:flex;align-items:center;gap:10px;padding:8px 0;margin-bottom:8px;border-bottom:1px solid var(--border)}
+.day-title{font-size:13px;font-weight:600;color:var(--text)}
+.day-count{font-size:11px;color:var(--muted);font-family:var(--mono)}
+.day-late{font-size:11px;color:var(--danger);font-family:var(--mono)}
+
+/* badges */
+.badge{display:inline-flex;align-items:center;gap:3px;padding:2px 8px;border-radius:20px;font-size:11px;font-weight:500;white-space:nowrap}
+.b-sep{background:rgba(59,130,246,.15);color:var(--info)}
+.b-bord{background:rgba(167,139,250,.15);color:var(--purple)}
+.b-emb{background:rgba(0,229,160,.15);color:var(--accent)}
+.b-prod{background:rgba(245,158,11,.15);color:var(--warn)}
+.b-done{background:rgba(0,229,160,.08);color:var(--accent2)}
+.b-late{background:rgba(239,68,68,.15);color:var(--danger)}
+.b-kit{background:rgba(251,146,60,.12);color:var(--orange);border:1px solid rgba(251,146,60,.25)}
+.b-bord-tag{background:rgba(167,139,250,.12);color:var(--purple);border:1px solid rgba(167,139,250,.25)}
+.b-neg{background:rgba(239,68,68,.12);color:var(--danger);border:1px solid rgba(239,68,68,.25)}
+
+/* sku tags */
+.sku-list{display:flex;flex-wrap:wrap;gap:4px}
+.sku-tag{background:var(--bg3);border:1px solid var(--border2);color:var(--muted);font-family:var(--mono);font-size:10px;padding:2px 6px;border-radius:4px}
+
+/* prazo */
+.prazo{font-family:var(--mono);font-size:12px;font-weight:600}
+.prazo.ok{color:var(--accent)}
+.prazo.warn{color:var(--warn)}
+.prazo.late{color:var(--danger)}
+
+/* modal */
+.modal-overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,.75);backdrop-filter:blur(4px);z-index:100;align-items:center;justify-content:center}
+.modal-overlay.open{display:flex}
+.modal{background:var(--bg2);border:1px solid var(--border2);border-radius:12px;width:600px;max-height:88vh;overflow-y:auto}
+.modal-lg{width:700px}
+.modal-header{padding:18px 22px 14px;border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;position:sticky;top:0;background:var(--bg2);z-index:1}
+.modal-title{font-size:15px;font-weight:600}
+.modal-close{background:none;border:none;color:var(--muted);cursor:pointer;font-size:18px;padding:4px;line-height:1}
+.modal-body{padding:20px 22px}
+.modal-footer{padding:14px 22px;border-top:1px solid var(--border);display:flex;justify-content:flex-end;gap:10px;position:sticky;bottom:0;background:var(--bg2)}
+
+/* form */
+.form-group{margin-bottom:14px}
+.form-label{font-size:12px;color:var(--muted);margin-bottom:5px;display:block}
+.form-input{width:100%;background:var(--bg3);border:1px solid var(--border2);border-radius:7px;padding:8px 11px;color:var(--text);font-family:var(--font);font-size:13px;outline:none}
+.form-input:focus{border-color:var(--accent)}
+.form-select{width:100%;background:var(--bg3);border:1px solid var(--border2);border-radius:7px;padding:8px 11px;color:var(--text);font-family:var(--font);font-size:13px;outline:none}
+
+/* bordado card */
+.bord-card{background:rgba(167,139,250,.06);border:1px solid rgba(167,139,250,.2);border-radius:10px;padding:16px;margin-bottom:12px}
+.bord-card-title{color:var(--purple);font-weight:600;font-size:13px;margin-bottom:12px;display:flex;align-items:center;gap:6px}
+.bord-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.bord-field{background:var(--bg3);border-radius:6px;padding:10px 12px}
+.bord-field-label{font-size:10px;color:var(--muted);text-transform:uppercase;letter-spacing:.5px;margin-bottom:4px}
+.bord-field-value{font-size:13px;font-weight:500;color:var(--text)}
+.bord-field-value.highlight{color:var(--purple);font-weight:600}
+.bord-brasao{background:rgba(251,146,60,.08);border:1px solid rgba(251,146,60,.25);border-radius:6px;padding:10px 12px;margin-top:8px}
+.bord-brasao-title{font-size:10px;color:var(--orange);text-transform:uppercase;letter-spacing:.5px;margin-bottom:4px}
+
+/* estoque */
+.estoque-neg{color:var(--danger);font-weight:600}
+.estoque-pos{color:var(--accent);font-weight:600}
+.estoque-zero{color:var(--muted)}
+
+/* alert */
+.alert{padding:10px 14px;border-radius:8px;font-size:13px;margin-bottom:12px;display:flex;align-items:center;gap:8px}
+.alert-warn{background:rgba(245,158,11,.1);border:1px solid rgba(245,158,11,.25);color:var(--warn)}
+.alert-danger{background:rgba(239,68,68,.1);border:1px solid rgba(239,68,68,.25);color:var(--danger)}
+.alert-info{background:rgba(59,130,246,.1);border:1px solid rgba(59,130,246,.25);color:var(--info)}
+.alert-success{background:rgba(0,229,160,.1);border:1px solid rgba(0,229,160,.25);color:var(--accent)}
+
+/* spinner */
+.spinner{width:16px;height:16px;border:2px solid rgba(0,229,160,.2);border-top-color:var(--accent);border-radius:50%;animation:spin .7s linear infinite;display:inline-block}
+@keyframes spin{to{transform:rotate(360deg)}}
+
+/* log */
+.log-entry{padding:8px 0;border-bottom:1px solid var(--border);display:flex;gap:10px;align-items:flex-start}
+.log-entry:last-child{border-bottom:none}
+.log-time{font-family:var(--mono);font-size:11px;color:var(--faint);min-width:46px;margin-top:2px}
+.log-msg{font-size:13px}
+
+/* page */
+.page{display:none}
+.page.active{display:block}
+
+/* grid */
+.grid2{display:grid;grid-template-columns:1fr 1fr;gap:16px}
+.mt12{margin-top:12px}
+.mt16{margin-top:16px}
+.text-muted{color:var(--muted)}
+.text-sm{font-size:12px}
+.mono{font-family:var(--mono)}
+.flex{display:flex}
+.items-center{align-items:center}
+.gap8{gap:8px}
+.gap4{gap:4px}
+.ml-auto{margin-left:auto}
+::-webkit-scrollbar{width:4px}
+::-webkit-scrollbar-track{background:transparent}
+::-webkit-scrollbar-thumb{background:var(--border2);border-radius:10px}
+</style>
+</head>
+<body>
+<div class="app">
+
+<!-- SIDEBAR -->
+<aside class="sidebar">
+  <div class="sidebar-logo">
+    <div class="brand">Grafitte</div>
+    <div class="sub">Sistema de Produção</div>
+  </div>
+  <nav class="sidebar-nav">
+    <div class="nav-section">Principal</div>
+    <button class="nav-item active" onclick="goTo('dashboard')"><span class="icon">◈</span> Dashboard</button>
+    <button class="nav-item" onclick="goTo('pedidos')"><span class="icon">◻</span> Pedidos <span class="badge-nav red" id="nav-pedidos">0</span></button>
+
+    <div class="nav-section">Produção</div>
+    <button class="nav-item" onclick="goTo('separacao')"><span class="icon">⊞</span> Separação <span class="badge-nav green" id="nav-sep">0</span></button>
+    <button class="nav-item" onclick="goTo('bordado')"><span class="icon">✦</span> Bordado <span class="badge-nav purple" id="nav-bord">0</span></button>
+    <button class="nav-item" onclick="goTo('embalagem')"><span class="icon">⬡</span> Embalagem <span class="badge-nav green" id="nav-emb">0</span></button>
+
+    <div class="nav-section">Estoque</div>
+    <button class="nav-item" onclick="goTo('estoque')"><span class="icon">▦</span> Estoque <span class="badge-nav red" id="nav-est">0</span></button>
+
+    <div class="nav-section">Config</div>
+    <button class="nav-item" onclick="goTo('config')"><span class="icon">◎</span> Configurações</button>
+  </nav>
+</aside>
+
+<!-- MAIN -->
+<main class="main">
+
+<!-- DASHBOARD -->
+<div id="page-dashboard" class="page active">
+  <div class="topbar">
+    <div>
+      <h1>Dashboard</h1>
+      <div class="text-muted text-sm" id="last-sync">Nenhuma sincronização ainda</div>
+    </div>
+    <div class="topbar-right">
+      <button class="btn btn-ghost" onclick="importarPedidos()" id="btn-import">↻ Importar pedidos</button>
+    </div>
+  </div>
+  <div id="alert-area"></div>
+  <div class="stats">
+    <div class="stat-card"><div class="stat-label">Total importado</div><div class="stat-value accent" id="s-total">0</div><div class="stat-sub">pedidos ativos</div></div>
+    <div class="stat-card"><div class="stat-label">Atrasados</div><div class="stat-value danger" id="s-atrasados">0</div><div class="stat-sub">acima de 3 dias úteis</div></div>
+    <div class="stat-card"><div class="stat-label">Separação</div><div class="stat-value info" id="s-sep">0</div><div class="stat-sub">aguardando separar</div></div>
+    <div class="stat-card"><div class="stat-label">Bordado</div><div class="stat-value purple" id="s-bord">0</div><div class="stat-sub">na oficina</div></div>
+    <div class="stat-card"><div class="stat-label">Embalagem</div><div class="stat-value warn" id="s-emb">0</div><div class="stat-sub">prontos para embalar</div></div>
+  </div>
+  <!-- alertas de atraso -->
+  <div id="alertas-dash"></div>
+  <div class="grid2">
+    <div class="card">
+      <div class="card-header"><span class="card-title">Pedidos recentes</span><button class="btn btn-ghost btn-sm" onclick="goTo('pedidos')">Ver todos</button></div>
+      <table class="table"><thead><tr><th>Pedido</th><th>Cliente</th><th>Etapa</th><th>Prazo</th></tr></thead>
+      <tbody id="dash-tbody"><tr><td colspan="4" style="text-align:center;color:var(--muted);padding:28px">Importe pedidos para começar</td></tr></tbody></table>
+    </div>
+    <div class="card">
+      <div class="card-header"><span class="card-title">Log de atividades</span></div>
+      <div style="padding:10px 16px;max-height:320px;overflow-y:auto"><div id="log-list"><div style="text-align:center;color:var(--muted);padding:28px 0">Sem atividades</div></div></div>
+    </div>
+  </div>
+</div>
+
+<!-- PEDIDOS -->
+<div id="page-pedidos" class="page">
+  <div class="topbar">
+    <h1>Pedidos</h1>
+    <div class="topbar-right">
+      <select class="form-select" style="width:auto" id="filtro-etapa" onchange="renderPedidos()">
+        <option value="">Todas as etapas</option>
+        <option value="separacao">Separação</option>
+        <option value="bordado">Bordado</option>
+        <option value="embalagem">Embalagem</option>
+        <option value="despachado">Despachados</option>
+      </select>
+      <button class="btn btn-ghost" onclick="importarPedidos()">↻ Importar</button>
+    </div>
+  </div>
+  <div id="pedidos-container"></div>
+</div>
+
+<!-- SEPARAÇÃO -->
+<div id="page-separacao" class="page">
+  <div class="topbar"><h1>Separação</h1></div>
+  <div class="card">
+    <div class="card-header"><span class="card-title">Fila de separação</span><span class="text-muted text-sm">Clique em "Separado" quando concluir</span></div>
+    <table class="table">
+      <thead><tr><th>Pedido</th><th>Cliente</th><th>SKUs</th><th>Kit/Bordado</th><th>Prazo</th><th>Ação</th></tr></thead>
+      <tbody id="sep-tbody"></tbody>
+    </table>
+  </div>
+</div>
+
+<!-- BORDADO -->
+<div id="page-bordado" class="page">
+  <div class="topbar"><h1>Bordado</h1></div>
+  <div class="card">
+    <div class="card-header"><span class="card-title">Pedidos com bordado</span><span class="text-muted text-sm">Verifique todas as personalizações antes de bordar</span></div>
+    <table class="table">
+      <thead><tr><th>Pedido</th><th>Cliente</th><th>SKUs</th><th>Personalização</th><th>Prazo</th><th>Ação</th></tr></thead>
+      <tbody id="bord-tbody"></tbody>
+    </table>
+  </div>
+</div>
+
+<!-- EMBALAGEM -->
+<div id="page-embalagem" class="page">
+  <div class="topbar"><h1>Embalagem</h1></div>
+  <div class="card">
+    <div class="card-header"><span class="card-title">Fila de embalagem</span><span class="text-muted text-sm">Check final antes de despachar</span></div>
+    <table class="table">
+      <thead><tr><th>Pedido</th><th>Cliente</th><th>SKUs</th><th>Tags</th><th>Prazo</th><th>Ação</th></tr></thead>
+      <tbody id="emb-tbody"></tbody>
+    </table>
+  </div>
+</div>
+
+<!-- ESTOQUE -->
+<div id="page-estoque" class="page">
+  <div class="topbar">
+    <h1>Estoque</h1>
+    <div class="topbar-right">
+      <button class="btn btn-primary" onclick="openModalEntrada()">+ Lançar entrada</button>
+    </div>
+  </div>
+  <div id="est-alert"></div>
+  <div class="card">
+    <div class="card-header">
+      <span class="card-title">SKUs cadastrados</span>
+      <div class="flex gap8 items-center">
+        <input class="form-input" style="width:220px" placeholder="Buscar SKU..." oninput="renderEstoque(this.value)" id="busca-sku">
+        <select class="form-select" style="width:auto" onchange="renderEstoque(document.getElementById('busca-sku').value, this.value)" id="filtro-est">
+          <option value="">Todos</option>
+          <option value="neg">Negativos</option>
+          <option value="pos">Positivos</option>
+          <option value="zero">Zerados</option>
+        </select>
+      </div>
+    </div>
+    <table class="table">
+      <thead><tr><th>SKU</th><th>Descrição</th><th>Saldo</th><th>Entradas</th><th>Saídas</th><th>Ação</th></tr></thead>
+      <tbody id="est-tbody"></tbody>
+    </table>
+  </div>
+</div>
+
+<!-- CONFIG -->
+<div id="page-config" class="page">
+  <div class="topbar"><h1>Configurações</h1></div>
+  <div class="card" style="max-width:500px">
+    <div class="card-header"><span class="card-title">Conexão Shoppub</span></div>
+    <div style="padding:18px">
+      <div class="form-group">
+        <label class="form-label">URL do servidor backend</label>
+        <input class="form-input" id="cfg-backend" placeholder="https://grafitte-backend-production.up.railway.app">
+      </div>
+      <div style="margin-bottom:14px;display:flex;align-items:center;gap:10px">
+        <button class="btn btn-ghost btn-sm" onclick="testarConexao()">⚡ Testar conexão</button>
+        <span id="teste-res" style="font-size:12px"></span>
+      </div>
+      <div class="form-group">
+        <label class="form-label">Prazo padrão (dias úteis)</label>
+        <input class="form-input" type="number" id="cfg-prazo" value="3" min="1" max="30">
+      </div>
+      <div class="form-group">
+        <label class="form-label">Prazo com bordado (dias úteis)</label>
+        <input class="form-input" type="number" id="cfg-prazo-bord" value="5" min="1" max="30">
+      </div>
+      <button class="btn btn-primary" onclick="salvarConfig()">Salvar</button>
+    </div>
+  </div>
+</div>
+
+</main>
+</div>
+
+<!-- MODAL DETALHE PEDIDO -->
+<div class="modal-overlay" id="modal-pedido">
+  <div class="modal modal-lg">
+    <div class="modal-header">
+      <span class="modal-title" id="mp-title">Pedido</span>
+      <button class="modal-close" onclick="closeModal('modal-pedido')">✕</button>
+    </div>
+    <div class="modal-body" id="mp-body"></div>
+    <div class="modal-footer">
+      <button class="btn btn-ghost" onclick="closeModal('modal-pedido')">Fechar</button>
+      <button class="btn btn-primary" id="mp-btn" style="display:none"></button>
+    </div>
+  </div>
+</div>
+
+<!-- MODAL ENTRADA ESTOQUE -->
+<div class="modal-overlay" id="modal-entrada">
+  <div class="modal">
+    <div class="modal-header">
+      <span class="modal-title">Lançar entrada de estoque</span>
+      <button class="modal-close" onclick="closeModal('modal-entrada')">✕</button>
+    </div>
+    <div class="modal-body">
+      <div class="form-group">
+        <label class="form-label">SKU</label>
+        <input class="form-input" id="ent-sku" placeholder="Ex: PIJ-MAS-TECH-PRETO-P" list="sku-list-datalist">
+        <datalist id="sku-list-datalist"></datalist>
+      </div>
+      <div class="form-group">
+        <label class="form-label">Quantidade</label>
+        <input class="form-input" type="number" id="ent-qtd" value="1" min="1">
+      </div>
+      <div class="form-group">
+        <label class="form-label">Observação (opcional)</label>
+        <input class="form-input" id="ent-obs" placeholder="Ex: Produção batch #12">
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-ghost" onclick="closeModal('modal-entrada')">Cancelar</button>
+      <button class="btn btn-primary" onclick="lancarEntrada()">Confirmar entrada</button>
+    </div>
+  </div>
+</div>
+
+<script>
+// ============================================================
+// STATE
+// ============================================================
+const STATE = {
+  pedidos: [],
+  estoque: {}, // { 'PIJ-MAS-TECH-PRETO-P': { saldo:0, entradas:[], saidas:[] } }
+  log: [],
+  config: {
+    backend: 'https://grafitte-backend-production.up.railway.app',
+    prazo: 3,
+    prazoBordado: 5
+  }
+};
+
+// Feriados nacionais 2025/2026 (YYYY-MM-DD)
+const FERIADOS = [
+  '2025-01-01','2025-04-18','2025-04-21','2025-05-01','2025-09-07',
+  '2025-10-12','2025-11-02','2025-11-15','2025-12-25',
+  '2026-01-01','2026-04-03','2026-04-21','2026-05-01','2026-09-07',
+  '2026-10-12','2026-11-02','2026-11-15','2026-12-25'
+];
+
+// ============================================================
+// NAVEGAÇÃO
+// ============================================================
+function goTo(page) {
+  document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+  document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
+  document.getElementById('page-' + page).classList.add('active');
+  const nav = [...document.querySelectorAll('.nav-item')].find(n => n.onclick?.toString().includes(`'${page}'`));
+  if (nav) nav.classList.add('active');
+  const renders = { pedidos: renderPedidos, separacao: () => renderFila('separacao'), bordado: () => renderFila('bordado'), embalagem: () => renderFila('embalagem'), estoque: renderEstoque, config: loadConfig };
+  if (renders[page]) renders[page]();
+}
+
+// ============================================================
+// DATAS E PRAZOS
+// ============================================================
+function isDiaUtil(d) {
+  const dia = d.getDay();
+  if (dia === 0 || dia === 6) return false;
+  const str = d.toISOString().split('T')[0];
+  return !FERIADOS.includes(str);
+}
+
+function adicionarDiasUteis(data, dias) {
+  const d = new Date(data);
+  let count = 0;
+  while (count < dias) {
+    d.setDate(d.getDate() + 1);
+    if (isDiaUtil(d)) count++;
+  }
+  return d;
+}
+
+function diasUteisPassados(data) {
+  const inicio = new Date(data); inicio.setHours(0,0,0,0);
+  const hoje = new Date(); hoje.setHours(0,0,0,0);
+  let count = 0;
+  const d = new Date(inicio);
+  while (d < hoje) {
+    d.setDate(d.getDate() + 1);
+    if (isDiaUtil(d) && d <= hoje) count++;
+  }
+  return count;
+}
+
+function prazoInfo(pedido) {
+  const diasPassados = diasUteisPassados(pedido.createdAt);
+  const diasRestantes = pedido.prazoMaxDias - diasPassados;
+  if (diasRestantes < 0) return { cls: 'late', txt: `${Math.abs(diasRestantes)}d atraso`, atrasado: true };
+  if (diasRestantes === 0) return { cls: 'warn', txt: 'Vence hoje!', atrasado: false };
+  if (diasRestantes === 1) return { cls: 'warn', txt: 'Amanhã', atrasado: false };
+  return { cls: 'ok', txt: `+${diasRestantes}d`, atrasado: false };
+}
+
+function formatarData(d) {
+  const data = new Date(d);
+  return data.toLocaleDateString('pt-BR', { weekday: 'long', day: '2-digit', month: '2-digit' });
+}
+
+function dataChave(d) {
+  return new Date(d).toISOString().split('T')[0];
+}
+
+// ============================================================
+// PARSER DE COMPLEMENTOS SHOPPUB
+// ============================================================
+function normalizarCor(cor) {
+  return cor.normalize('NFD').replace(/[\u0300-\u036f]/g,'').toUpperCase().replace(/\s+/g,'').replace(/[^A-Z0-9]/g,'');
+}
+function normalizarTecido(t) {
+  const s = t.toLowerCase();
+  if (s.includes('gabardine')||s.includes('gabardina')) return 'GAB';
+  if (s.includes('tech')) return 'TECH';
+  if (s.includes('brim')) return 'BRIM';
+  if (s.includes('oxford')) return 'OXF';
+  return 'TECH';
+}
+function normalizarGenero(t) {
+  const s = t.toLowerCase();
+  if (s.includes('feminino')||s.includes('fem')) return 'FEM';
+  if (s.includes('masculino')||s.includes('mas')||s.includes('masc')) return 'MAS';
+  return 'UNI';
+}
+function normalizarTipo(t) {
+  const s = t.toLowerCase();
+  if (s.includes('jaleco')) return 'JAL';
+  if (s.includes('pijama')) return 'PIJ';
+  return 'PIJ';
+}
+function normalizarTipoJaleco(t) {
+  const s = t.toLowerCase();
+  if (s.includes('botão')||s.includes('botao')) return 'BTN';
+  if (s.includes('zíper')||s.includes('zipper')||s.includes('zip')) return 'ZIP';
+  if (s.includes('gola padre')||s.includes('padre')) return 'GP';
+  return '';
+}
+function extrairTamanho(t) {
+  const m = t.match(/\b(PP|P|M|GG|G|XG|XGG|EXG)\b/i);
+  return m ? m[1].toUpperCase() : '';
+}
+function gerarSKU(tipo, genero, tecido, tipoJal, cor, tamanho) {
+  const p = [tipo, genero, tecido];
+  if (tipoJal) p.push(tipoJal);
+  if (cor) p.push(normalizarCor(cor));
+  if (tamanho) p.push(tamanho);
+  return p.join('-');
+}
+
+function parsearBordado(textoOuArray) {
+  const b = { temBordado: false, nome: '', profissao: '', tipografia: '', cor: '', brasao: '', posicaoBrasao: '' };
+  let texto = '';
+  if (Array.isArray(textoOuArray)) {
+    texto = textoOuArray.map(c => typeof c === 'string' ? c : (c.valor||c.value||c.descricao||c.label||c.nome||JSON.stringify(c))).join(' / ');
+  } else {
+    texto = String(textoOuArray || '');
+  }
+  if (!texto.trim()) return b;
+
+  // Nome — "Bordado do Nome Gratis - Luana Dias"
+  const mNome = texto.match(/bordado\s*(?:do\s*)?nome[^-]*-\s*([^(+][^/\n]*?)(?:\s*\/|$)/i);
+  if (mNome && mNome[1].trim().length > 1) { b.nome = mNome[1].trim(); b.temBordado = true; }
+
+  // Profissao — "Bordado Profissao Gratis - Farmaceutica"
+  const mProf = texto.match(/(?:bordado\s*)?profiss[aã]o[^-]*-\s*([^(+][^/\n]*?)(?:\s*\/|$)/i);
+  if (mProf && mProf[1].trim().length > 1 && !mProf[1].toLowerCase().includes('ficar')) {
+    b.profissao = mProf[1].trim(); b.temBordado = true;
+  }
+
+  // Tipografia
+  ['Arial','Montpe Curvisa','Times New Roman'].forEach(f => { if (texto.includes(f)) b.tipografia = f; });
+
+  // Cor da letra (evita confundir com cor do pijama)
+  ['Preto','Azul Marinho','Azul Royal','Verde Garden','Cinza','Branco','Dourado','Rosa','Prata','Vinho'].forEach(c => {
+    if (texto.toLowerCase().includes('cor da letra') && texto.includes(c)) b.cor = c;
+    else if (texto.includes('tipografia') && texto.includes(c)) b.cor = c;
+  });
+
+  // Brasão — "Bordado do brasao do seu curso ou profissao - Sim"
+  if (texto.toLowerCase().includes('bras') && (texto.toLowerCase().includes('- sim') || texto.toLowerCase().includes('curso'))) {
+    b.brasao = 'Sim'; b.temBordado = true;
+  }
+
+  // Posição brasão — "Escolha a posicao do bordado - Brasao - Manga direita"
+  const mPos = texto.match(/posi[cç][aã]o[^-]*-[^-]*-\s*([^/
+]+?)(?:\s*\/|$)/i);
+  if (mPos) b.posicaoBrasao = mPos[1].trim();
+  else {
+    ['Manga esquerda','Manga direita','Bolso Do Peito','Bolso do Peito'].forEach(p => {
+      if (texto.toLowerCase().includes(p.toLowerCase())) b.posicaoBrasao = p;
+    });
+  }
+
+  if (b.nome || b.profissao || b.brasao) b.temBordado = true;
+  return b;
+}
+
+// ============================================================
+// PROCESSAR PEDIDOS DA SHOPPUB
+// ============================================================
+function processarPedidos(raw) {
+  let novos = 0;
+  raw.forEach(p => {
+    const id = String(p.id);
+    if (STATE.pedidos.find(x => x.id === id)) return;
+
+    const itens = [];
+    let bordado = { temBordado: false };
+
+    (p.pedidoitem_set || []).forEach(item => {
+      const titulo = item.produto_nome || '';
+      const complementosRaw = item.complemento || [];
+
+      // Junta complementos em texto único para parsing
+      const textoComp = Array.isArray(complementosRaw)
+        ? complementosRaw.map(c => typeof c === 'string' ? c : (c.valor||c.value||c.descricao||c.label||c.nome||JSON.stringify(c))).join(' / ')
+        : String(complementosRaw || '');
+
+      const tipo = normalizarTipo(titulo);
+      const genero = normalizarGenero(titulo);
+      const tecido = normalizarTecido(titulo);
+      const tipoJal = tipo === 'JAL' ? normalizarTipoJaleco(titulo) : '';
+
+      // Tamanho do atributo_valor do item
+      const tamanho = item.atributo_valor || extrairTamanho(textoComp) || extrairTamanho(titulo);
+
+      // COR do produto individual — vem no complemento como "Cor: Azul Marinho"
+      let corBase = '';
+      const mCorComp = textoComp.match(/Cor\s*:\s*([^/
+,]+)/i);
+      if (mCorComp) corBase = mCorComp[1].trim();
+
+      // Detecta bordado
+      const b = parsearBordado(textoComp);
+      if (b.temBordado) bordado = b;
+
+      if (item.is_kit && item.pedidoitemkit_set?.length > 0) {
+        item.pedidoitemkit_set.forEach((ki, idx) => {
+          const nomeKit = ki.produto_nome || '';
+          // Cor do kit vem no nome: "...Tech Azul Marinho-M" — pega antes do ultimo traço+tamanho
+          const corKitMatch = nomeKit.match(/([A-Za-zÀ-ÿ\s]+(?:\s+[A-Za-zÀ-ÿ]+)*)\s*-\s*[A-Z]{1,3}$/);
+          let corKit = corKitMatch ? corKitMatch[1].trim().split(/\s+/).slice(-2).join(' ') : '';
+          // Fallback: pega tudo depois do último traço antes do tamanho
+          if (!corKit) {
+            const m2 = nomeKit.match(/[-–]\s*([A-Za-zÀ-ÿ][A-Za-zÀ-ÿ\s]+?)\s*-\s*[PPMMGGXG]{1,3}$/i);
+            if (m2) corKit = m2[1].trim();
+          }
+          if (!corKit) corKit = ki.atributo_valor || corBase;
+          const tamKit = ki.atributo_valor || tamanho;
+          const sku = gerarSKU(tipo, genero, tecido, tipoJal, corKit, tamKit);
+          itens.push({ nome: nomeKit, sku, cor: corKit, tamanho: tamKit, tipo, genero, tecido, qtd: ki.quantidade || 1, deKit: titulo, numero: idx + 1 });
+          baixarEstoque(sku, ki.quantidade || 1);
+        });
+      } else {
+        // Produto individual
+        if (!corBase) {
+          const m = titulo.match(/[-–]\s*([A-Za-zÀ-ÿ][^-–]+)$/);
+          if (m) corBase = m[1].trim();
+        }
+        const sku = gerarSKU(tipo, genero, tecido, tipoJal, corBase, tamanho);
+        const qtd = item.quantidade || 1;
+        itens.push({ nome: titulo, sku, cor: corBase, tamanho, tipo, genero, tecido, qtd, deKit: null, numero: 1 });
+        baixarEstoque(sku, qtd);
+      }
+    });
+
+    const dataPagamento = new Date(`${p.data}T${p.hora || '12:00:00'}`);
+    const prazoMaxDias = bordado.temBordado ? STATE.config.prazoBordado : STATE.config.prazo;
+
+    // Número curto do pedido (só os dígitos após o -)
+    const numeroCurto = String(p.shoppub_id || p.id).split('-').pop();
+
+    const pedido = {
+      id,
+      numero: numeroCurto,
+      numeroCompleto: p.shoppub_id || String(p.id),
+      cliente: p.cliente_nome || 'Cliente',
+      email: p.email || '',
+      itens,
+      bordado,
+      status: 'separacao',
+      etapas: { separacao: false, bordado: bordado.temBordado ? false : null, embalagem: false },
+      createdAt: dataPagamento,
+      prazoMaxDias,
+      total: parseFloat(p.valor_total) || 0,
+      entrega: {
+        destinatario: p.entrega_destinatario, cep: p.entrega_cep,
+        logradouro: p.entrega_logradouro, numero: p.entrega_numero,
+        bairro: p.entrega_bairro, cidade: p.entrega_cidade, estado: p.entrega_estado
+      }
+    };
+
+    STATE.pedidos.push(pedido);
+    novos++;
+
+    const tags = [];
+    if (pedido.itens.some(i => i.deKit)) tags.push('kit');
+    if (bordado.temBordado) tags.push('bordado');
+    addLog(`#${pedido.numero} — ${pedido.cliente}${tags.length ? ' [' + tags.join(', ') + ']' : ''} → separação`, 'success');
+  });
+  return novos;
+}
+
+// ============================================================
+// ESTOQUE
+// ============================================================
+function baixarEstoque(sku, qtd) {
+  if (!STATE.estoque[sku]) STATE.estoque[sku] = { saldo: 0, entradas: [], saidas: [] };
+  STATE.estoque[sku].saldo -= qtd;
+  STATE.estoque[sku].saidas.push({ qtd, data: new Date(), tipo: 'pedido' });
+}
+
+function lancarEntrada() {
+  const sku = document.getElementById('ent-sku').value.trim().toUpperCase();
+  const qtd = parseInt(document.getElementById('ent-qtd').value);
+  const obs = document.getElementById('ent-obs').value.trim();
+  if (!sku || !qtd || qtd < 1) return alert('Preencha SKU e quantidade');
+  if (!STATE.estoque[sku]) STATE.estoque[sku] = { saldo: 0, entradas: [], saidas: [] };
+  STATE.estoque[sku].saldo += qtd;
+  STATE.estoque[sku].entradas.push({ qtd, data: new Date(), obs });
+  addLog(`Estoque +${qtd} em ${sku}${obs ? ' (' + obs + ')' : ''}`, 'success');
+  closeModal('modal-entrada');
+  renderEstoque();
+  atualizarNavBadges();
+}
+
+function openModalEntrada() {
+  document.getElementById('ent-sku').value = '';
+  document.getElementById('ent-qtd').value = '1';
+  document.getElementById('ent-obs').value = '';
+  // Preenche datalist com SKUs conhecidos
+  const dl = document.getElementById('sku-list-datalist');
+  dl.innerHTML = Object.keys(STATE.estoque).map(s => `<option value="${s}">`).join('');
+  openModal('modal-entrada');
+}
+
+function renderEstoque(busca = '', filtro = '') {
+  const f = (document.getElementById('filtro-est')?.value) || filtro;
+  const b = busca.toUpperCase();
+  const tbody = document.getElementById('est-tbody');
+  const skus = Object.keys(STATE.estoque).sort();
+  const filtered = skus.filter(s => {
+    if (b && !s.includes(b)) return false;
+    if (f === 'neg' && STATE.estoque[s].saldo >= 0) return false;
+    if (f === 'pos' && STATE.estoque[s].saldo <= 0) return false;
+    if (f === 'zero' && STATE.estoque[s].saldo !== 0) return false;
+    return true;
+  });
+
+  const negativos = skus.filter(s => STATE.estoque[s].saldo < 0).length;
+  document.getElementById('nav-est').textContent = negativos;
+
+  if (filtered.length === 0) {
+    tbody.innerHTML = '<tr><td colspan="6" style="text-align:center;color:var(--muted);padding:32px">Nenhum SKU encontrado</td></tr>';
+    return;
+  }
+
+  tbody.innerHTML = filtered.map(sku => {
+    const e = STATE.estoque[sku];
+    const cls = e.saldo < 0 ? 'estoque-neg' : e.saldo > 0 ? 'estoque-pos' : 'estoque-zero';
+    const partes = sku.split('-');
+    const desc = gerarDescricaoSKU(sku);
+    const totalEnt = e.entradas.reduce((a,x) => a + x.qtd, 0);
+    const totalSai = e.saidas.reduce((a,x) => a + x.qtd, 0);
+    return `<tr>
+      <td class="mono" style="font-size:12px">${sku}</td>
+      <td class="text-sm text-muted">${desc}</td>
+      <td class="${cls} mono" style="font-size:15px">${e.saldo > 0 ? '+' : ''}${e.saldo}</td>
+      <td class="mono text-sm" style="color:var(--accent)">+${totalEnt}</td>
+      <td class="mono text-sm" style="color:var(--danger)">-${totalSai}</td>
+      <td><button class="btn btn-ghost btn-sm" onclick="quickEntrada('${sku}')">+ Entrada</button></td>
+    </tr>`;
+  }).join('');
+
+  // Alert de negativos
+  const estAlert = document.getElementById('est-alert');
+  if (negativos > 0) {
+    estAlert.innerHTML = `<div class="alert alert-danger" style="margin-bottom:14px">⚠ ${negativos} SKU(s) com saldo negativo — necessário produção ou reposição</div>`;
+  } else {
+    estAlert.innerHTML = '';
+  }
+}
+
+function quickEntrada(sku) {
+  document.getElementById('ent-sku').value = sku;
+  document.getElementById('ent-qtd').value = '1';
+  document.getElementById('ent-obs').value = '';
+  openModal('modal-entrada');
+}
+
+function gerarDescricaoSKU(sku) {
+  const p = sku.split('-');
+  const tipo = p[0] === 'PIJ' ? 'Pijama Cirúrgico' : p[0] === 'JAL' ? 'Jaleco' : p[0];
+  const genero = p[1] === 'MAS' ? 'Masc.' : p[1] === 'FEM' ? 'Fem.' : p[1] || '';
+  const tecido = p[2] || '';
+  const resto = p.slice(3).join(' ');
+  return [tipo, genero, tecido, resto].filter(Boolean).join(' ');
+}
+
+// ============================================================
+// IMPORTAÇÃO
+// ============================================================
+async function importarPedidos() {
+  const btn = document.getElementById('btn-import');
+  btn.disabled = true;
+  btn.innerHTML = '<span class="spinner"></span> Importando...';
+  addLog('Conectando ao servidor...', 'info');
+
+  try {
+    const res = await fetch(`${STATE.config.backend}/api/pedidos`);
+    if (!res.ok) throw new Error(`HTTP ${res.status}`);
+    const data = await res.json();
+
+    if (data.sucesso && data.pedidos?.length > 0) {
+      const novos = processarPedidos(data.pedidos);
+      addLog(`✓ ${novos} pedidos novos importados (${data.total} no total dos últimos 30 dias)`, 'success');
+      document.getElementById('last-sync').textContent = `Última sincronização: ${new Date().toLocaleTimeString('pt-BR')} — ${data.total} pedidos`;
+    } else {
+      addLog(data.mensagem || 'Nenhum pedido novo', 'warn');
+    }
+  } catch(e) {
+    addLog('Erro na importação: ' + e.message, 'error');
+    showAlert('danger', 'Erro ao conectar ao servidor: ' + e.message);
+  }
+
+  atualizarDashboard();
+  btn.disabled = false;
+  btn.innerHTML = '↻ Importar pedidos';
+}
+
+// ============================================================
+// DASHBOARD
+// ============================================================
+function atualizarDashboard() {
+  const p = STATE.pedidos;
+  const atrasados = p.filter(x => x.status !== 'despachado' && prazoInfo(x).atrasado);
+  const sep = p.filter(x => x.status === 'separacao');
+  const bord = p.filter(x => x.status === 'bordado');
+  const emb = p.filter(x => x.status === 'embalagem');
+
+  document.getElementById('s-total').textContent = p.filter(x => x.status !== 'despachado').length;
+  document.getElementById('s-atrasados').textContent = atrasados.length;
+  document.getElementById('s-sep').textContent = sep.length;
+  document.getElementById('s-bord').textContent = bord.length;
+  document.getElementById('s-emb').textContent = emb.length;
+
+  atualizarNavBadges();
+
+  // Alertas de atraso
+  const ad = document.getElementById('alertas-dash');
+  if (atrasados.length > 0) {
+    ad.innerHTML = atrasados.slice(0, 3).map(x => {
+      const pi = prazoInfo(x);
+      return `<div class="alert alert-danger">⚠ Pedido <strong>#${x.numero}</strong> — ${x.cliente} — <strong>${pi.txt}</strong> — etapa: ${etapaLabel(x.status)}</div>`;
+    }).join('') + (atrasados.length > 3 ? `<div class="alert alert-danger">+${atrasados.length-3} pedidos atrasados</div>` : '');
+  } else {
+    ad.innerHTML = '';
+  }
+
+  // Tabela recentes
+  const tbody = document.getElementById('dash-tbody');
+  const recentes = [...p].sort((a,b) => new Date(b.createdAt) - new Date(a.createdAt)).slice(0,8);
+  if (recentes.length === 0) {
+    tbody.innerHTML = '<tr><td colspan="4" style="text-align:center;color:var(--muted);padding:28px">Importe pedidos para começar</td></tr>';
+    return;
+  }
+  tbody.innerHTML = recentes.map(x => {
+    const pi = prazoInfo(x);
+    return `<tr>
+      <td class="mono" style="color:var(--accent);cursor:pointer" onclick="abrirDetalhe('${x.id}')">#${x.numero}</td>
+      <td>${x.cliente}</td>
+      <td><span class="badge ${badgeCls(x.status)}">${etapaLabel(x.status)}</span></td>
+      <td><span class="prazo ${pi.cls}">${pi.txt}</span></td>
+    </tr>`;
+  }).join('');
+}
+
+function atualizarNavBadges() {
+  const p = STATE.pedidos;
+  document.getElementById('nav-pedidos').textContent = p.filter(x => x.status !== 'despachado').length;
+  document.getElementById('nav-sep').textContent = p.filter(x => x.status === 'separacao').length;
+  document.getElementById('nav-bord').textContent = p.filter(x => x.status === 'bordado').length;
+  document.getElementById('nav-emb').textContent = p.filter(x => x.status === 'embalagem').length;
+  const negativos = Object.values(STATE.estoque).filter(e => e.saldo < 0).length;
+  document.getElementById('nav-est').textContent = negativos;
+}
+
+// ============================================================
+// PÁGINA DE PEDIDOS — agrupada por dia
+// ============================================================
+function renderPedidos() {
+  const filtroEtapa = document.getElementById('filtro-etapa')?.value || '';
+  let lista = filtroEtapa ? STATE.pedidos.filter(p => p.status === filtroEtapa) : STATE.pedidos;
+  lista = [...lista].sort((a,b) => new Date(b.createdAt) - new Date(a.createdAt));
+
+  const container = document.getElementById('pedidos-container');
+  if (lista.length === 0) {
+    container.innerHTML = '<div class="card" style="padding:40px;text-align:center;color:var(--muted)">Nenhum pedido encontrado</div>';
+    return;
+  }
+
+  // Agrupa por dia
+  const grupos = {};
+  lista.forEach(p => {
+    const chave = dataChave(p.createdAt);
+    if (!grupos[chave]) grupos[chave] = [];
+    grupos[chave].push(p);
+  });
+
+  const dias = Object.keys(grupos).sort((a,b) => b.localeCompare(a));
+
+  container.innerHTML = dias.map(dia => {
+    const pedidos = grupos[dia];
+    const atrasados = pedidos.filter(p => prazoInfo(p).atrasado && p.status !== 'despachado').length;
+    const dataFormatada = formatarData(dia + 'T12:00:00');
+
+    const linhas = pedidos.map(p => {
+      const pi = prazoInfo(p);
+      const isKit = p.itens.some(i => i.deKit);
+      const skusUnicos = [...new Set(p.itens.map(i => i.sku))];
+
+      return `<tr>
+        <td>
+          <span class="mono" style="color:var(--accent);cursor:pointer;font-weight:600" onclick="abrirDetalhe('${p.id}')">#${p.numero}</span>
+        </td>
+        <td>
+          <div style="font-weight:500">${p.cliente}</div>
+          <div class="text-sm text-muted">${p.email}</div>
+        </td>
+        <td>
+          <div class="sku-list">
+            ${skusUnicos.map(s => `<span class="sku-tag">${s}</span>`).join('')}
+          </div>
+        </td>
+        <td>
+          <div style="display:flex;gap:4px;flex-wrap:wrap">
+            ${isKit ? '<span class="badge b-kit">📦 Kit</span>' : ''}
+            ${p.bordado.temBordado ? '<span class="badge b-bord-tag">✦ Bordado</span>' : ''}
+          </div>
+        </td>
+        <td><span class="badge ${badgeCls(p.status)}">${etapaLabel(p.status)}</span></td>
+        <td><span class="prazo ${pi.cls}">${pi.txt}</span></td>
+        <td>
+          <div style="display:flex;gap:6px">
+            <button class="btn btn-ghost btn-sm" onclick="abrirDetalhe('${p.id}')">Detalhe</button>
+            ${acaoBtnInline(p)}
+          </div>
+        </td>
+      </tr>`;
+    }).join('');
+
+    return `<div class="day-group">
+      <div class="day-header">
+        <span class="day-title">${dataFormatada}</span>
+        <span class="day-count">${pedidos.length} pedido${pedidos.length > 1 ? 's' : ''}</span>
+        ${atrasados > 0 ? `<span class="day-late">⚠ ${atrasados} atrasado${atrasados > 1 ? 's' : ''}</span>` : ''}
+      </div>
+      <div class="card">
+        <table class="table">
+          <thead><tr><th>Pedido</th><th>Cliente</th><th>SKUs</th><th>Tags</th><th>Etapa</th><th>Prazo</th><th>Ações</th></tr></thead>
+          <tbody>${linhas}</tbody>
+        </table>
+      </div>
+    </div>`;
+  }).join('');
+}
+
+function acaoBtnInline(p) {
+  if (p.status === 'separacao') return `<button class="btn btn-primary btn-sm" onclick="avancar('${p.id}')">✓ Separado</button>`;
+  if (p.status === 'bordado') return `<button class="btn btn-purple btn-sm" onclick="abrirDetalhe('${p.id}')">Ver bordado</button>`;
+  if (p.status === 'embalagem') return `<button class="btn btn-primary btn-sm" onclick="avancar('${p.id}')">✓ Despachar</button>`;
+  if (p.status === 'despachado') return `<span style="color:var(--accent);font-size:12px">✓ Despachado</span>`;
+  return '';
+}
+
+// ============================================================
+// FILAS DE PRODUÇÃO
+// ============================================================
+function renderFila(etapa) {
+  const ids = { separacao: 'sep-tbody', bordado: 'bord-tbody', embalagem: 'emb-tbody' };
+  const tbody = document.getElementById(ids[etapa]);
+  if (!tbody) return;
+  const pedidos = STATE.pedidos.filter(p => p.status === etapa);
+
+  if (pedidos.length === 0) {
+    tbody.innerHTML = `<tr><td colspan="7" style="text-align:center;color:var(--muted);padding:36px">Fila vazia ✓</td></tr>`;
+    return;
+  }
+
+  tbody.innerHTML = pedidos.sort((a,b) => prazoInfo(a).cls === 'late' ? -1 : 1).map(p => {
+    const pi = prazoInfo(p);
+    const isKit = p.itens.some(i => i.deKit);
+    const skusUnicos = [...new Set(p.itens.map(i => i.sku))];
+    const skuHtml = `<div class="sku-list">${skusUnicos.map(s => `<span class="sku-tag">${s}</span>`).join('')}</div>`;
+
+    if (etapa === 'separacao') return `<tr ${pi.atrasado ? 'style="background:rgba(239,68,68,.04)"' : ''}>
+      <td><span class="mono" style="color:var(--accent);cursor:pointer" onclick="abrirDetalhe('${p.id}')">#${p.numero}</span></td>
+      <td><div>${p.cliente}</div><div class="text-sm text-muted">${p.email}</div></td>
+      <td>${skuHtml}</td>
+      <td><div style="display:flex;gap:4px">${isKit?'<span class="badge b-kit">Kit</span>':''}${p.bordado.temBordado?'<span class="badge b-bord-tag">✦ Bordado</span>':''}</div></td>
+      <td><span class="prazo ${pi.cls}">${pi.txt}</span></td>
+      <td><button class="btn btn-primary btn-sm" onclick="avancar('${p.id}')">✓ Separado</button></td>
+    </tr>`;
+
+    if (etapa === 'bordado') {
+      const b = p.bordado;
+      const resumo = [b.nome, b.profissao, b.tipografia, b.cor].filter(Boolean).join(' · ');
+      return `<tr ${pi.atrasado ? 'style="background:rgba(239,68,68,.04)"' : ''}>
+        <td><span class="mono" style="color:var(--accent);cursor:pointer" onclick="abrirDetalhe('${p.id}')">#${p.numero}</span></td>
+        <td><div>${p.cliente}</div><div class="text-sm text-muted">${p.email}</div></td>
+        <td>${skuHtml}</td>
+        <td>
+          <div style="font-size:12px;color:var(--purple)">${resumo || 'Ver detalhe'}</div>
+          ${b.brasao ? `<div style="font-size:11px;color:var(--orange);margin-top:2px">🔰 Brasão: ${b.posicaoBrasao || 'ver detalhe'}</div>` : ''}
+        </td>
+        <td><span class="prazo ${pi.cls}">${pi.txt}</span></td>
+        <td>
+          <div style="display:flex;gap:6px">
+            <button class="btn btn-ghost btn-sm" onclick="abrirDetalhe('${p.id}')">Ver tudo</button>
+            <button class="btn btn-primary btn-sm" onclick="avancar('${p.id}')">✓ Bordado ok</button>
+          </div>
+        </td>
+      </tr>`;
+    }
+
+    if (etapa === 'embalagem') return `<tr ${pi.atrasado ? 'style="background:rgba(239,68,68,.04)"' : ''}>
+      <td><span class="mono" style="color:var(--accent);cursor:pointer" onclick="abrirDetalhe('${p.id}')">#${p.numero}</span></td>
+      <td><div>${p.cliente}</div><div class="text-sm text-muted">${p.email}</div></td>
+      <td>${skuHtml}</td>
+      <td><div style="display:flex;gap:4px">${isKit?'<span class="badge b-kit">Kit</span>':''}${p.bordado.temBordado?'<span class="badge b-bord-tag">✦ Bord.</span>':''}</div></td>
+      <td><span class="prazo ${pi.cls}">${pi.txt}</span></td>
+      <td><button class="btn btn-primary btn-sm" onclick="avancar('${p.id}')">✓ Despachar</button></td>
+    </tr>`;
+
+    return '';
+  }).join('');
+}
+
+// ============================================================
+// AVANÇAR ETAPA
+// ============================================================
+function avancar(id) {
+  const p = STATE.pedidos.find(x => x.id === id);
+  if (!p) return;
+
+  if (p.status === 'separacao') {
+    p.etapas.separacao = true;
+    if (p.bordado.temBordado) {
+      p.status = 'bordado';
+      addLog(`#${p.numero} → bordado`, 'info');
+    } else {
+      p.status = 'embalagem';
+      addLog(`#${p.numero} → embalagem`, 'success');
+    }
+  } else if (p.status === 'bordado') {
+    p.etapas.bordado = true;
+    p.status = 'embalagem';
+    addLog(`#${p.numero} → bordado concluído → embalagem`, 'success');
+  } else if (p.status === 'embalagem') {
+    p.etapas.embalagem = true;
+    p.status = 'despachado';
+    addLog(`#${p.numero} ✓ DESPACHADO`, 'success');
+  }
+
+  atualizarDashboard();
+  // Rerender da página atual
+  const paginaAtiva = document.querySelector('.page.active')?.id?.replace('page-','');
+  if (paginaAtiva === 'pedidos') renderPedidos();
+  else if (['separacao','bordado','embalagem'].includes(paginaAtiva)) renderFila(paginaAtiva);
+}
+
+// ============================================================
+// DETALHE DO PEDIDO
+// ============================================================
+function abrirDetalhe(id) {
+  const p = STATE.pedidos.find(x => x.id === id);
+  if (!p) return;
+  const pi = prazoInfo(p);
+  const b = p.bordado;
+  const isKit = p.itens.some(i => i.deKit);
+
+  document.getElementById('mp-title').textContent = `Pedido #${p.numero} — ${p.cliente}`;
+
+  let bordadoHtml = '';
+  if (b.temBordado) {
+    bordadoHtml = `<div class="bord-card">
+      <div class="bord-card-title">✦ Personalização — Bordado</div>
+      <div class="bord-grid">
+        ${b.nome ? `<div class="bord-field"><div class="bord-field-label">Nome</div><div class="bord-field-value highlight">${b.nome}</div></div>` : ''}
+        ${b.profissao ? `<div class="bord-field"><div class="bord-field-label">Profissão</div><div class="bord-field-value highlight">${b.profissao}</div></div>` : ''}
+        ${b.tipografia ? `<div class="bord-field"><div class="bord-field-label">Tipografia</div><div class="bord-field-value">${b.tipografia}</div></div>` : ''}
+        ${b.cor ? `<div class="bord-field"><div class="bord-field-label">Cor da letra</div><div class="bord-field-value" style="display:flex;align-items:center;gap:6px"><span style="width:12px;height:12px;border-radius:50%;background:${corCSS(b.cor)};display:inline-block;border:1px solid var(--border2)"></span>${b.cor}</div></div>` : ''}
+      </div>
+      ${b.brasao ? `<div class="bord-brasao">
+        <div class="bord-brasao-title">🔰 Brasão / Logo</div>
+        <div style="font-weight:600;color:var(--orange)">${b.brasao}</div>
+        ${b.posicaoBrasao ? `<div style="font-size:12px;color:var(--muted);margin-top:4px">📍 Posição: <strong style="color:var(--text)">${b.posicaoBrasao}</strong></div>` : ''}
+      </div>` : ''}
+    </div>`;
+  }
+
+  document.getElementById('mp-body').innerHTML = `
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-bottom:18px">
+      <div><div class="form-label">Cliente</div><div style="font-weight:500">${p.cliente}</div><div class="text-sm text-muted">${p.email}</div></div>
+      <div><div class="form-label">Status</div><span class="badge ${badgeCls(p.status)}">${etapaLabel(p.status)}</span></div>
+      <div><div class="form-label">Data do pagamento</div><div class="mono text-sm">${new Date(p.createdAt).toLocaleDateString('pt-BR')}</div></div>
+      <div><div class="form-label">Prazo</div><span class="prazo ${pi.cls}">${pi.txt}</span></div>
+      ${p.entrega?.cidade ? `<div><div class="form-label">Entrega</div><div class="text-sm">${p.entrega.cidade}/${p.entrega.estado} — CEP ${p.entrega.cep}</div></div>` : ''}
+    </div>
+
+    ${bordadoHtml}
+
+    <div class="form-label" style="margin-bottom:8px">SKUs do pedido (${p.itens.length})</div>
+    <table class="table" style="margin-bottom:16px">
+      <thead><tr><th>#</th><th>SKU gerado</th><th>Cor</th><th>Tam</th><th>Origem</th></tr></thead>
+      <tbody>
+        ${p.itens.map((item, i) => `<tr>
+          <td class="mono text-muted text-sm">${i+1}</td>
+          <td class="mono text-sm" style="color:var(--accent)">${item.sku}</td>
+          <td class="text-sm">${item.cor || '—'}</td>
+          <td class="mono text-sm">${item.tamanho || '—'}</td>
+          <td>${item.deKit ? `<span class="badge b-kit">Kit ${item.numero}</span>` : '<span class="text-muted text-sm">Individual</span>'}</td>
+        </tr>`).join('')}
+      </tbody>
+    </table>
+
+    <div class="form-label" style="margin-bottom:8px">Progresso</div>
+    <div style="display:flex;gap:6px;flex-wrap:wrap">
+      ${[
+        { key: 'separacao', label: 'Separação' },
+        ...(b.temBordado ? [{ key: 'bordado', label: 'Bordado' }] : []),
+        { key: 'embalagem', label: 'Embalagem' }
+      ].map(e => {
+        const done = p.etapas[e.key] === true;
+        const active = p.status === e.key;
+        return `<span class="badge ${done ? 'b-done' : active ? 'b-sep' : ''}" style="${!done && !active ? 'opacity:.4' : ''}">${done ? '✓' : active ? '●' : '○'} ${e.label}</span>`;
+      }).join('')}
+      ${p.status === 'despachado' ? '<span class="badge b-done">✓ Despachado</span>' : ''}
+    </div>
+  `;
+
+  // Botão de ação no footer
+  const btnAcao = document.getElementById('mp-btn');
+  if (p.status === 'separacao') {
+    btnAcao.style.display = '';
+    btnAcao.textContent = '✓ Marcar como separado';
+    btnAcao.className = 'btn btn-primary';
+    btnAcao.onclick = () => { avancar(id); closeModal('modal-pedido'); };
+  } else if (p.status === 'bordado') {
+    btnAcao.style.display = '';
+    btnAcao.textContent = '✓ Bordado concluído';
+    btnAcao.className = 'btn btn-purple';
+    btnAcao.onclick = () => { avancar(id); closeModal('modal-pedido'); };
+  } else if (p.status === 'embalagem') {
+    btnAcao.style.display = '';
+    btnAcao.textContent = '✓ Despachar pedido';
+    btnAcao.className = 'btn btn-primary';
+    btnAcao.onclick = () => { avancar(id); closeModal('modal-pedido'); };
+  } else {
+    btnAcao.style.display = 'none';
+  }
+
+  openModal('modal-pedido');
+}
+
+function corCSS(cor) {
+  const m = {
+    'Preto':'#111','Azul Marinho':'#1a3a5c','Azul Royal':'#1e40af','Verde Garden':'#166534',
+    'Cinza':'#6b7280','Branco':'#f9fafb','Dourado':'#b45309','Rosa':'#ec4899',
+    'Prata':'#9ca3af','Vinho':'#7f1d1d'
+  };
+  return m[cor] || '#888';
+}
+
+// ============================================================
+// HELPERS
+// ============================================================
+function etapaLabel(s) {
+  return { separacao:'Separação', bordado:'Bordado', embalagem:'Embalagem', despachado:'Despachado' }[s] || s;
+}
+function badgeCls(s) {
+  return { separacao:'badge b-sep', bordado:'badge b-bord', embalagem:'badge b-emb', despachado:'badge b-done' }[s] || 'badge';
+}
+
+function addLog(msg, type='info') {
+  const icons = { success:'✓', warn:'⚠', error:'✕', info:'·' };
+  const colors = { success:'var(--accent)', warn:'var(--warn)', error:'var(--danger)', info:'var(--muted)' };
+  STATE.log.unshift({ msg, type, time: new Date() });
+  const el = document.getElementById('log-list');
+  if (STATE.log.length === 1) el.innerHTML = '';
+  const e = document.createElement('div');
+  e.className = 'log-entry';
+  e.innerHTML = `<div class="log-time">${new Date().toLocaleTimeString('pt-BR',{hour:'2-digit',minute:'2-digit'})}</div>
+    <div class="log-msg"><span style="color:${colors[type]}">${icons[type]}</span> ${msg}</div>`;
+  el.prepend(e);
+}
+
+function showAlert(type, msg) {
+  const area = document.getElementById('alert-area');
+  const cls = { info:'alert-info', warn:'alert-warn', danger:'alert-danger', success:'alert-success' }[type] || 'alert-info';
+  area.innerHTML = `<div class="alert ${cls}">${msg}</div>`;
+  setTimeout(() => area.innerHTML = '', 6000);
+}
+
+function openModal(id) { document.getElementById(id).classList.add('open'); }
+function closeModal(id) { document.getElementById(id).classList.remove('open'); }
+document.querySelectorAll('.modal-overlay').forEach(o => o.addEventListener('click', e => { if (e.target === o) o.classList.remove('open'); }));
+
+// ============================================================
+// CONFIG
+// ============================================================
+function loadConfig() {
+  document.getElementById('cfg-backend').value = STATE.config.backend;
+  document.getElementById('cfg-prazo').value = STATE.config.prazo;
+  document.getElementById('cfg-prazo-bord').value = STATE.config.prazoBordado;
+}
+function salvarConfig() {
+  STATE.config.backend = document.getElementById('cfg-backend').value.trim().replace(/\/$/,'');
+  STATE.config.prazo = parseInt(document.getElementById('cfg-prazo').value);
+  STATE.config.prazoBordado = parseInt(document.getElementById('cfg-prazo-bord').value);
+  addLog('Configurações salvas', 'success');
+  showAlert('success', '✓ Configurações salvas!');
+}
+async function testarConexao() {
+  const el = document.getElementById('teste-res');
+  el.textContent = 'Testando...'; el.style.color = 'var(--muted)';
+  try {
+    const r = await fetch(`${STATE.config.backend}/api/testar`);
+    const d = await r.json();
+    if (d.sucesso) { el.textContent = `✓ OK — ${d.total_pedidos} pedidos`; el.style.color = 'var(--accent)'; }
+    else { el.textContent = '⚠ Servidor ok, Shoppub falhou'; el.style.color = 'var(--warn)'; }
+  } catch(e) { el.textContent = '✕ Servidor não encontrado'; el.style.color = 'var(--danger)'; }
+}
+
+// INIT
+atualizarDashboard();
+</script>
+</body>
+</html>
