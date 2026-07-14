@@ -3,176 +3,180 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Grafitte — Sistema de Produção</title>
+<title>Grafitte — Sistema de Gestão</title>
 <style>
 @import url('https://fonts.googleapis.com/css2?family=DM+Sans:wght@300;400;500;600&family=DM+Mono:wght@400;500&display=swap');
 :root {
   --bg:#0f0f0f; --bg2:#181818; --bg3:#222; --border:#2a2a2a; --border2:#333;
   --text:#e8e8e8; --muted:#888; --faint:#444;
   --accent:#00e5a0; --accent2:#00b87a; --warn:#f59e0b; --danger:#ef4444;
-  --info:#3b82f6; --purple:#a78bfa; --pink:#f472b6; --orange:#fb923c;
+  --info:#3b82f6; --purple:#a78bfa; --orange:#fb923c;
   --font:'DM Sans',sans-serif; --mono:'DM Mono',monospace;
 }
 *{box-sizing:border-box;margin:0;padding:0}
 body{background:var(--bg);color:var(--text);font-family:var(--font);font-size:14px;line-height:1.5;min-height:100vh}
 .app{display:flex;min-height:100vh}
-.sidebar{width:220px;background:var(--bg2);border-right:1px solid var(--border);display:flex;flex-direction:column;position:fixed;height:100vh;z-index:10;overflow-y:auto}
-.main{margin-left:220px;flex:1;padding:24px 28px}
-.sidebar-logo{padding:20px 18px 14px;border-bottom:1px solid var(--border)}
-.sidebar-logo .brand{font-size:15px;font-weight:600;color:var(--accent);letter-spacing:-.3px}
-.sidebar-logo .sub{font-size:11px;color:var(--muted);margin-top:2px}
-.sidebar-nav{padding:10px 8px;flex:1}
-.nav-item{display:flex;align-items:center;gap:9px;padding:8px 10px;border-radius:7px;cursor:pointer;color:var(--muted);font-size:13px;font-weight:500;transition:all .15s;margin-bottom:2px;border:none;background:none;width:100%;text-align:left}
-.nav-item:hover{background:var(--bg3);color:var(--text)}
-.nav-item.active{background:rgba(0,229,160,.1);color:var(--accent)}
-.nav-item .icon{font-size:15px;width:17px;text-align:center}
-.nav-section{font-size:10px;color:var(--faint);letter-spacing:.8px;text-transform:uppercase;padding:12px 10px 5px}
-.badge-nav{margin-left:auto;font-size:10px;font-weight:600;padding:1px 6px;border-radius:10px;font-family:var(--mono)}
-.badge-nav.red{background:var(--danger);color:#fff}
-.badge-nav.green{background:var(--accent2);color:#000}
-.badge-nav.warn{background:var(--warn);color:#000}
-.badge-nav.purple{background:var(--purple);color:#000}
 
-/* topbar */
-.topbar{display:flex;align-items:center;justify-content:space-between;margin-bottom:22px}
+/* SIDEBAR */
+.sidebar{width:220px;background:var(--bg2);border-right:1px solid var(--border);display:flex;flex-direction:column;position:fixed;height:100vh;z-index:10}
+.main{margin-left:220px;flex:1;padding:24px 28px}
+.logo{padding:20px 18px 14px;border-bottom:1px solid var(--border)}
+.logo .brand{font-size:15px;font-weight:600;color:var(--accent)}
+.logo .sub{font-size:11px;color:var(--muted);margin-top:2px}
+.nav{padding:10px 8px;flex:1}
+.nav-section{font-size:10px;color:var(--faint);letter-spacing:.8px;text-transform:uppercase;padding:12px 10px 5px}
+.nav-btn{display:flex;align-items:center;gap:9px;padding:8px 10px;border-radius:7px;cursor:pointer;color:var(--muted);font-size:13px;font-weight:500;transition:all .15s;margin-bottom:2px;border:none;background:none;width:100%;text-align:left;font-family:var(--font)}
+.nav-btn:hover{background:var(--bg3);color:var(--text)}
+.nav-btn.active{background:rgba(0,229,160,.1);color:var(--accent)}
+.nav-badge{margin-left:auto;font-size:10px;font-weight:600;padding:1px 6px;border-radius:10px;font-family:var(--mono)}
+.nb-red{background:var(--danger);color:#fff}
+.nb-green{background:var(--accent2);color:#000}
+.nb-warn{background:var(--warn);color:#000}
+.nb-purple{background:var(--purple);color:#000}
+
+/* CARDS */
+.stats{display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin-bottom:22px}
+.stat{background:var(--bg2);border:1px solid var(--border);border-radius:10px;padding:14px 16px}
+.stat-label{font-size:11px;color:var(--muted);text-transform:uppercase;letter-spacing:.5px;margin-bottom:6px}
+.stat-value{font-size:24px;font-weight:600;font-family:var(--mono);letter-spacing:-1px}
+.stat-sub{font-size:11px;color:var(--muted);margin-top:3px}
+
+/* TOPBAR */
+.topbar{display:flex;align-items:center;justify-content:space-between;margin-bottom:20px}
 .topbar h1{font-size:19px;font-weight:600;letter-spacing:-.4px}
 .topbar-right{display:flex;gap:10px;align-items:center}
 
-/* buttons */
+/* BTN */
 .btn{display:inline-flex;align-items:center;gap:6px;padding:7px 14px;border-radius:7px;font-family:var(--font);font-size:13px;font-weight:500;cursor:pointer;transition:all .15s;border:none}
 .btn-primary{background:var(--accent);color:#000}
 .btn-primary:hover{background:var(--accent2)}
 .btn-primary:disabled{opacity:.4;cursor:not-allowed}
 .btn-ghost{background:var(--bg3);color:var(--text);border:1px solid var(--border2)}
 .btn-ghost:hover{border-color:var(--faint)}
-.btn-danger{background:rgba(239,68,68,.15);color:var(--danger);border:1px solid rgba(239,68,68,.3)}
 .btn-warn{background:rgba(245,158,11,.15);color:var(--warn);border:1px solid rgba(245,158,11,.3)}
-.btn-purple{background:rgba(167,139,250,.15);color:var(--purple);border:1px solid rgba(167,139,250,.3)}
 .btn-sm{padding:5px 10px;font-size:12px}
 
-/* stats */
-.stats{display:grid;grid-template-columns:repeat(5,1fr);gap:12px;margin-bottom:22px}
-.stat-card{background:var(--bg2);border:1px solid var(--border);border-radius:10px;padding:14px 16px}
-.stat-label{font-size:11px;color:var(--muted);text-transform:uppercase;letter-spacing:.5px;margin-bottom:6px}
-.stat-value{font-size:24px;font-weight:600;font-family:var(--mono);letter-spacing:-1px}
-.stat-value.accent{color:var(--accent)}
-.stat-value.warn{color:var(--warn)}
-.stat-value.danger{color:var(--danger)}
-.stat-value.info{color:var(--info)}
-.stat-value.purple{color:var(--purple)}
-.stat-sub{font-size:11px;color:var(--muted);margin-top:3px}
-
-/* card */
-.card{background:var(--bg2);border:1px solid var(--border);border-radius:10px}
+/* CARD */
+.card{background:var(--bg2);border:1px solid var(--border);border-radius:10px;margin-bottom:16px}
 .card-header{padding:14px 18px;border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between}
 .card-title{font-size:13px;font-weight:600}
 
-/* table */
+/* TABLE */
 .table{width:100%;border-collapse:collapse}
 .table th{font-size:11px;color:var(--muted);text-transform:uppercase;letter-spacing:.5px;padding:9px 16px;text-align:left;border-bottom:1px solid var(--border);font-weight:500;white-space:nowrap}
 .table td{padding:11px 16px;border-bottom:1px solid var(--border);vertical-align:middle}
 .table tr:last-child td{border-bottom:none}
 .table tbody tr:hover{background:rgba(255,255,255,.02)}
 
-/* day group */
-.day-group{margin-bottom:24px}
-.day-header{display:flex;align-items:center;gap:10px;padding:8px 0;margin-bottom:8px;border-bottom:1px solid var(--border)}
-.day-title{font-size:13px;font-weight:600;color:var(--text)}
-.day-count{font-size:11px;color:var(--muted);font-family:var(--mono)}
-.day-late{font-size:11px;color:var(--danger);font-family:var(--mono)}
-
-/* badges */
+/* BADGES */
 .badge{display:inline-flex;align-items:center;gap:3px;padding:2px 8px;border-radius:20px;font-size:11px;font-weight:500;white-space:nowrap}
 .b-sep{background:rgba(59,130,246,.15);color:var(--info)}
 .b-bord{background:rgba(167,139,250,.15);color:var(--purple)}
 .b-emb{background:rgba(0,229,160,.15);color:var(--accent)}
-.b-prod{background:rgba(245,158,11,.15);color:var(--warn)}
-.b-done{background:rgba(0,229,160,.08);color:var(--accent2)}
 .b-late{background:rgba(239,68,68,.15);color:var(--danger)}
+.b-ok{background:rgba(0,229,160,.08);color:var(--accent2)}
 .b-kit{background:rgba(251,146,60,.12);color:var(--orange);border:1px solid rgba(251,146,60,.25)}
 .b-bord-tag{background:rgba(167,139,250,.12);color:var(--purple);border:1px solid rgba(167,139,250,.25)}
-.b-neg{background:rgba(239,68,68,.12);color:var(--danger);border:1px solid rgba(239,68,68,.25)}
+.b-desp{background:rgba(100,100,100,.15);color:var(--muted)}
 
-/* sku tags */
-.sku-list{display:flex;flex-wrap:wrap;gap:4px}
-.sku-tag{background:var(--bg3);border:1px solid var(--border2);color:var(--muted);font-family:var(--mono);font-size:10px;padding:2px 6px;border-radius:4px}
-
-/* prazo */
+/* PRAZO */
 .prazo{font-family:var(--mono);font-size:12px;font-weight:600}
 .prazo.ok{color:var(--accent)}
 .prazo.warn{color:var(--warn)}
 .prazo.late{color:var(--danger)}
 
-/* modal */
+/* SKU TAG */
+.sku-tag{background:var(--bg3);border:1px solid var(--border2);color:var(--muted);font-family:var(--mono);font-size:10px;padding:2px 6px;border-radius:4px;display:inline-block;margin:1px}
+
+/* ALERT */
+.alert{padding:10px 14px;border-radius:8px;font-size:13px;margin-bottom:12px;display:flex;align-items:center;gap:8px}
+.alert-danger{background:rgba(239,68,68,.1);border:1px solid rgba(239,68,68,.25);color:var(--danger)}
+.alert-warn{background:rgba(245,158,11,.1);border:1px solid rgba(245,158,11,.25);color:var(--warn)}
+.alert-info{background:rgba(59,130,246,.1);border:1px solid rgba(59,130,246,.25);color:var(--info)}
+.alert-success{background:rgba(0,229,160,.1);border:1px solid rgba(0,229,160,.25);color:var(--accent)}
+
+/* SPINNER */
+.spinner{width:16px;height:16px;border:2px solid rgba(0,229,160,.2);border-top-color:var(--accent);border-radius:50%;animation:spin .7s linear infinite;display:inline-block}
+@keyframes spin{to{transform:rotate(360deg)}}
+
+/* PAGE */
+.page{display:none}
+.page.active{display:block}
+
+/* DAY GROUP */
+.day-group{margin-bottom:20px}
+.day-header{display:flex;align-items:center;gap:10px;padding:6px 0;margin-bottom:8px;border-bottom:1px solid var(--border)}
+.day-title{font-size:13px;font-weight:600}
+.day-count{font-size:11px;color:var(--muted);font-family:var(--mono)}
+.day-late{font-size:11px;color:var(--danger)}
+
+/* ESTOQUE */
+.est-neg{color:var(--danger);font-weight:600}
+.est-pos{color:var(--accent);font-weight:600}
+.est-zero{color:var(--muted)}
+.est-critical{background:rgba(239,68,68,.05)}
+
+/* MODAL */
 .modal-overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,.75);backdrop-filter:blur(4px);z-index:100;align-items:center;justify-content:center}
 .modal-overlay.open{display:flex}
-.modal{background:var(--bg2);border:1px solid var(--border2);border-radius:12px;width:600px;max-height:88vh;overflow-y:auto}
-.modal-lg{width:700px}
+.modal{background:var(--bg2);border:1px solid var(--border2);border-radius:12px;width:620px;max-height:88vh;overflow-y:auto}
 .modal-header{padding:18px 22px 14px;border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;position:sticky;top:0;background:var(--bg2);z-index:1}
 .modal-title{font-size:15px;font-weight:600}
 .modal-close{background:none;border:none;color:var(--muted);cursor:pointer;font-size:18px;padding:4px;line-height:1}
 .modal-body{padding:20px 22px}
 .modal-footer{padding:14px 22px;border-top:1px solid var(--border);display:flex;justify-content:flex-end;gap:10px;position:sticky;bottom:0;background:var(--bg2)}
 
-/* form */
+/* FORM */
 .form-group{margin-bottom:14px}
 .form-label{font-size:12px;color:var(--muted);margin-bottom:5px;display:block}
 .form-input{width:100%;background:var(--bg3);border:1px solid var(--border2);border-radius:7px;padding:8px 11px;color:var(--text);font-family:var(--font);font-size:13px;outline:none}
 .form-input:focus{border-color:var(--accent)}
 .form-select{width:100%;background:var(--bg3);border:1px solid var(--border2);border-radius:7px;padding:8px 11px;color:var(--text);font-family:var(--font);font-size:13px;outline:none}
 
-/* bordado card */
-.bord-card{background:rgba(167,139,250,.06);border:1px solid rgba(167,139,250,.2);border-radius:10px;padding:16px;margin-bottom:12px}
-.bord-card-title{color:var(--purple);font-weight:600;font-size:13px;margin-bottom:12px;display:flex;align-items:center;gap:6px}
-.bord-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px}
-.bord-field{background:var(--bg3);border-radius:6px;padding:10px 12px}
-.bord-field-label{font-size:10px;color:var(--muted);text-transform:uppercase;letter-spacing:.5px;margin-bottom:4px}
-.bord-field-value{font-size:13px;font-weight:500;color:var(--text)}
-.bord-field-value.highlight{color:var(--purple);font-weight:600}
-.bord-brasao{background:rgba(251,146,60,.08);border:1px solid rgba(251,146,60,.25);border-radius:6px;padding:10px 12px;margin-top:8px}
-.bord-brasao-title{font-size:10px;color:var(--orange);text-transform:uppercase;letter-spacing:.5px;margin-bottom:4px}
+/* PCP */
+.pcp-card{background:var(--bg3);border:1px solid var(--border2);border-radius:8px;padding:12px 14px;margin-bottom:8px;display:flex;align-items:center;gap:12px}
+.pcp-sku{font-family:var(--mono);font-size:12px;color:var(--accent);font-weight:600;min-width:220px}
+.pcp-qtd{font-family:var(--mono);font-size:18px;font-weight:600;min-width:50px}
+.pcp-info{font-size:11px;color:var(--muted)}
+.pcp-status{margin-left:auto}
 
-/* estoque */
-.estoque-neg{color:var(--danger);font-weight:600}
-.estoque-pos{color:var(--accent);font-weight:600}
-.estoque-zero{color:var(--muted)}
-
-/* alert */
-.alert{padding:10px 14px;border-radius:8px;font-size:13px;margin-bottom:12px;display:flex;align-items:center;gap:8px}
-.alert-warn{background:rgba(245,158,11,.1);border:1px solid rgba(245,158,11,.25);color:var(--warn)}
-.alert-danger{background:rgba(239,68,68,.1);border:1px solid rgba(239,68,68,.25);color:var(--danger)}
-.alert-info{background:rgba(59,130,246,.1);border:1px solid rgba(59,130,246,.25);color:var(--info)}
-.alert-success{background:rgba(0,229,160,.1);border:1px solid rgba(0,229,160,.25);color:var(--accent)}
-
-/* spinner */
-.spinner{width:16px;height:16px;border:2px solid rgba(0,229,160,.2);border-top-color:var(--accent);border-radius:50%;animation:spin .7s linear infinite;display:inline-block}
-@keyframes spin{to{transform:rotate(360deg)}}
-
-/* log */
-.log-entry{padding:8px 0;border-bottom:1px solid var(--border);display:flex;gap:10px;align-items:flex-start}
+/* LOG */
+.log-entry{padding:7px 0;border-bottom:1px solid var(--border);display:flex;gap:10px}
 .log-entry:last-child{border-bottom:none}
 .log-time{font-family:var(--mono);font-size:11px;color:var(--faint);min-width:46px;margin-top:2px}
 .log-msg{font-size:13px}
 
-/* page */
-.page{display:none}
-.page.active{display:block}
-
-/* grid */
-.grid2{display:grid;grid-template-columns:1fr 1fr;gap:16px}
-.mt12{margin-top:12px}
-.mt16{margin-top:16px}
+/* MISC */
 .text-muted{color:var(--muted)}
 .text-sm{font-size:12px}
 .mono{font-family:var(--mono)}
 .flex{display:flex}
 .items-center{align-items:center}
 .gap8{gap:8px}
-.gap4{gap:4px}
-.ml-auto{margin-left:auto}
+.mt12{margin-top:12px}
+.grid2{display:grid;grid-template-columns:1fr 1fr;gap:14px}
 ::-webkit-scrollbar{width:4px}
 ::-webkit-scrollbar-track{background:transparent}
 ::-webkit-scrollbar-thumb{background:var(--border2);border-radius:10px}
+
+/* CHECKLIST */
+.chk-item{display:flex;align-items:center;gap:12px;padding:10px 14px;border-bottom:1px solid var(--border);cursor:pointer;transition:background .1s}
+.chk-item:hover{background:rgba(255,255,255,.02)}
+.chk-item.checked{background:rgba(0,229,160,.04)}
+.chk-box{width:22px;height:22px;border:2px solid var(--faint);border-radius:6px;display:flex;align-items:center;justify-content:center;flex-shrink:0;transition:all .15s}
+.chk-box.checked{background:var(--accent);border-color:var(--accent);color:#000;font-size:13px;font-weight:700}
+.chk-sku{font-family:var(--mono);font-size:12px;color:var(--accent);font-weight:600}
+.chk-desc{font-size:12px;color:var(--muted);margin-top:2px}
+.chk-bord{font-size:11px;color:var(--purple);margin-top:3px}
+.chk-progress{padding:12px 14px;border-top:1px solid var(--border);display:flex;align-items:center;gap:10px;font-size:12px}
+.chk-bar{flex:1;height:4px;background:var(--border2);border-radius:10px;overflow:hidden}
+.chk-fill{height:100%;background:var(--accent);border-radius:10px;transition:width .3s}
+.bord-card{background:rgba(167,139,250,.06);border:1px solid rgba(167,139,250,.2);border-radius:8px;padding:12px 14px;margin-bottom:10px}
+.bord-title{color:var(--purple);font-weight:600;font-size:12px;margin-bottom:8px}
+.bord-grid{display:flex;flex-wrap:wrap;gap:8px}
+.bord-field{background:var(--bg3);border-radius:5px;padding:6px 10px}
+.bord-field-label{font-size:10px;color:var(--muted)}
+.bord-field-value{font-size:12px;font-weight:600;color:var(--purple)}
 </style>
 </head>
 <body>
@@ -180,29 +184,32 @@ body{background:var(--bg);color:var(--text);font-family:var(--font);font-size:14
 
 <!-- SIDEBAR -->
 <aside class="sidebar">
-  <div class="sidebar-logo">
+  <div class="logo">
     <div class="brand">Grafitte</div>
-    <div class="sub">Sistema de Produção</div>
+    <div class="sub">Sistema de Gestão</div>
   </div>
-  <nav class="sidebar-nav">
+  <nav class="nav">
     <div class="nav-section">Principal</div>
-    <button class="nav-item active" onclick="goTo('dashboard')"><span class="icon">◈</span> Dashboard</button>
-    <button class="nav-item" onclick="goTo('pedidos')"><span class="icon">◻</span> Pedidos <span class="badge-nav red" id="nav-pedidos">0</span></button>
+    <button class="nav-btn active" onclick="goTo('dashboard')">◈ Dashboard</button>
+    <button class="nav-btn" onclick="goTo('pedidos')">◻ Pedidos <span class="nav-badge nb-red" id="nb-ped">0</span></button>
+    <button class="nav-btn" onclick="goTo('pecas-dia')">📦 Peças do Dia <span class="nav-badge nb-green" id="nb-pecas">0</span></button>
 
     <div class="nav-section">Produção</div>
-    <button class="nav-item" onclick="goTo('separacao')"><span class="icon">⊞</span> Separação <span class="badge-nav green" id="nav-sep">0</span></button>
-    <button class="nav-item" onclick="goTo('bordado')"><span class="icon">✦</span> Bordado <span class="badge-nav purple" id="nav-bord">0</span></button>
-    <button class="nav-item" onclick="goTo('embalagem')"><span class="icon">⬡</span> Embalagem <span class="badge-nav green" id="nav-emb">0</span></button>
+    <button class="nav-btn" onclick="goTo('separacao')">⊞ Separação <span class="nav-badge nb-green" id="nb-sep">0</span></button>
+    <button class="nav-btn" onclick="goTo('bordado')">✦ Bordado <span class="nav-badge nb-purple" id="nb-bord">0</span></button>
+    <button class="nav-btn" onclick="goTo('embalagem')">⬡ Embalagem <span class="nav-badge nb-green" id="nb-emb">0</span></button>
 
-    <div class="nav-section">Estoque</div>
-    <button class="nav-item" onclick="goTo('estoque')"><span class="icon">▦</span> Estoque <span class="badge-nav red" id="nav-est">0</span></button>
+    <div class="nav-section">Inteligência</div>
+    <button class="nav-btn" onclick="goTo('estoque')">▦ Estoque <span class="nav-badge nb-red" id="nb-est">0</span></button>
+    <button class="nav-btn" onclick="goTo('necessidade')">🎯 Necessidade de Prod. <span class="nav-badge nb-red" id="nb-nec">0</span></button>
+    <button class="nav-btn" onclick="goTo('pcp')">⚙ PCP / Previsão</button>
+    <button class="nav-btn" onclick="goTo('relatorio')">📊 Relatório Semanal</button>
 
     <div class="nav-section">Config</div>
-    <button class="nav-item" onclick="goTo('config')"><span class="icon">◎</span> Configurações</button>
+    <button class="nav-btn" onclick="goTo('config')">◎ Configurações</button>
   </nav>
 </aside>
 
-<!-- MAIN -->
 <main class="main">
 
 <!-- DASHBOARD -->
@@ -213,28 +220,27 @@ body{background:var(--bg);color:var(--text);font-family:var(--font);font-size:14
       <div class="text-muted text-sm" id="last-sync">Nenhuma sincronização ainda</div>
     </div>
     <div class="topbar-right">
-      <button class="btn btn-ghost" onclick="importarPedidos()" id="btn-import">↻ Importar pedidos</button>
+      <button class="btn btn-ghost btn-sm" onclick="importarHistorico()" id="btn-hist">📚 Importar histórico</button>
+      <button class="btn btn-primary" onclick="importarAtivos()" id="btn-import">↻ Importar pedidos ativos</button>
     </div>
   </div>
   <div id="alert-area"></div>
+  <div id="alertas-atraso"></div>
   <div class="stats">
-    <div class="stat-card"><div class="stat-label">Total importado</div><div class="stat-value accent" id="s-total">0</div><div class="stat-sub">pedidos ativos</div></div>
-    <div class="stat-card"><div class="stat-label">Atrasados</div><div class="stat-value danger" id="s-atrasados">0</div><div class="stat-sub">acima de 3 dias úteis</div></div>
-    <div class="stat-card"><div class="stat-label">Separação</div><div class="stat-value info" id="s-sep">0</div><div class="stat-sub">aguardando separar</div></div>
-    <div class="stat-card"><div class="stat-label">Bordado</div><div class="stat-value purple" id="s-bord">0</div><div class="stat-sub">na oficina</div></div>
-    <div class="stat-card"><div class="stat-label">Embalagem</div><div class="stat-value warn" id="s-emb">0</div><div class="stat-sub">prontos para embalar</div></div>
+    <div class="stat"><div class="stat-label">Pedidos ativos</div><div class="stat-value" style="color:var(--accent)" id="s-total">0</div><div class="stat-sub">em andamento</div></div>
+    <div class="stat"><div class="stat-label">Atrasados</div><div class="stat-value" style="color:var(--danger)" id="s-late">0</div><div class="stat-sub">acima de 3 dias úteis</div></div>
+    <div class="stat"><div class="stat-label">Peças hoje</div><div class="stat-value" style="color:var(--info)" id="s-pecas">0</div><div class="stat-sub">vendidas ontem</div></div>
+    <div class="stat"><div class="stat-label">SKUs críticos</div><div class="stat-value" style="color:var(--warn)" id="s-criticos">0</div><div class="stat-sub">estoque abaixo do mínimo</div></div>
   </div>
-  <!-- alertas de atraso -->
-  <div id="alertas-dash"></div>
   <div class="grid2">
     <div class="card">
-      <div class="card-header"><span class="card-title">Pedidos recentes</span><button class="btn btn-ghost btn-sm" onclick="goTo('pedidos')">Ver todos</button></div>
-      <table class="table"><thead><tr><th>Pedido</th><th>Cliente</th><th>Etapa</th><th>Prazo</th></tr></thead>
-      <tbody id="dash-tbody"><tr><td colspan="4" style="text-align:center;color:var(--muted);padding:28px">Importe pedidos para começar</td></tr></tbody></table>
+      <div class="card-header"><span class="card-title">⚠ Pedidos atrasados</span></div>
+      <table class="table"><thead><tr><th>Pedido</th><th>Cliente</th><th>Atraso</th><th>Peças</th></tr></thead>
+      <tbody id="dash-atrasados"><tr><td colspan="4" style="text-align:center;color:var(--muted);padding:24px">Sem atrasos</td></tr></tbody></table>
     </div>
     <div class="card">
-      <div class="card-header"><span class="card-title">Log de atividades</span></div>
-      <div style="padding:10px 16px;max-height:320px;overflow-y:auto"><div id="log-list"><div style="text-align:center;color:var(--muted);padding:28px 0">Sem atividades</div></div></div>
+      <div class="card-header"><span class="card-title">Log</span></div>
+      <div style="padding:10px 14px;max-height:280px;overflow-y:auto"><div id="log-list"><div style="text-align:center;color:var(--muted);padding:24px 0">Sem atividades</div></div></div>
     </div>
   </div>
 </div>
@@ -242,30 +248,39 @@ body{background:var(--bg);color:var(--text);font-family:var(--font);font-size:14
 <!-- PEDIDOS -->
 <div id="page-pedidos" class="page">
   <div class="topbar">
-    <h1>Pedidos</h1>
+    <h1>Pedidos Ativos</h1>
     <div class="topbar-right">
       <select class="form-select" style="width:auto" id="filtro-etapa" onchange="renderPedidos()">
-        <option value="">Todas as etapas</option>
+        <option value="ativos">Ativos</option>
         <option value="separacao">Separação</option>
         <option value="bordado">Bordado</option>
         <option value="embalagem">Embalagem</option>
         <option value="despachado">Despachados</option>
+        <option value="">Todos</option>
       </select>
-      <button class="btn btn-ghost" onclick="importarPedidos()">↻ Importar</button>
     </div>
   </div>
   <div id="pedidos-container"></div>
+</div>
+
+<!-- PEÇAS DO DIA -->
+<div id="page-pecas-dia" class="page">
+  <div class="topbar">
+    <h1>Peças do Dia</h1>
+    <div class="topbar-right">
+      <input type="date" class="form-input" style="width:auto" id="data-pecas" onchange="renderPecasDia()">
+    </div>
+  </div>
+  <div id="pecas-dia-container"></div>
 </div>
 
 <!-- SEPARAÇÃO -->
 <div id="page-separacao" class="page">
   <div class="topbar"><h1>Separação</h1></div>
   <div class="card">
-    <div class="card-header"><span class="card-title">Fila de separação</span><span class="text-muted text-sm">Clique em "Separado" quando concluir</span></div>
-    <table class="table">
-      <thead><tr><th>Pedido</th><th>Cliente</th><th>SKUs</th><th>Kit/Bordado</th><th>Prazo</th><th>Ação</th></tr></thead>
-      <tbody id="sep-tbody"></tbody>
-    </table>
+    <div class="card-header"><span class="card-title">Fila de separação</span></div>
+    <table class="table"><thead><tr><th>Pedido</th><th>Cliente</th><th>SKUs</th><th>Tags</th><th>Prazo</th><th>Ação</th></tr></thead>
+    <tbody id="sep-tbody"></tbody></table>
   </div>
 </div>
 
@@ -273,11 +288,9 @@ body{background:var(--bg);color:var(--text);font-family:var(--font);font-size:14
 <div id="page-bordado" class="page">
   <div class="topbar"><h1>Bordado</h1></div>
   <div class="card">
-    <div class="card-header"><span class="card-title">Pedidos com bordado</span><span class="text-muted text-sm">Verifique todas as personalizações antes de bordar</span></div>
-    <table class="table">
-      <thead><tr><th>Pedido</th><th>Cliente</th><th>SKUs</th><th>Personalização</th><th>Prazo</th><th>Ação</th></tr></thead>
-      <tbody id="bord-tbody"></tbody>
-    </table>
+    <div class="card-header"><span class="card-title">Pedidos com bordado</span></div>
+    <table class="table"><thead><tr><th>Pedido</th><th>Cliente</th><th>SKUs</th><th>Personalização</th><th>Prazo</th><th>Ação</th></tr></thead>
+    <tbody id="bord-tbody"></tbody></table>
   </div>
 </div>
 
@@ -285,11 +298,9 @@ body{background:var(--bg);color:var(--text);font-family:var(--font);font-size:14
 <div id="page-embalagem" class="page">
   <div class="topbar"><h1>Embalagem</h1></div>
   <div class="card">
-    <div class="card-header"><span class="card-title">Fila de embalagem</span><span class="text-muted text-sm">Check final antes de despachar</span></div>
-    <table class="table">
-      <thead><tr><th>Pedido</th><th>Cliente</th><th>SKUs</th><th>Tags</th><th>Prazo</th><th>Ação</th></tr></thead>
-      <tbody id="emb-tbody"></tbody>
-    </table>
+    <div class="card-header"><span class="card-title">Fila de embalagem</span><span class="text-muted text-sm">Confirme cada item antes de despachar</span></div>
+    <table class="table"><thead><tr><th>Pedido</th><th>Cliente</th><th>Peças</th><th>Tags</th><th>Prazo</th><th>Ação</th></tr></thead>
+    <tbody id="emb-tbody"></tbody></table>
   </div>
 </div>
 
@@ -298,42 +309,81 @@ body{background:var(--bg);color:var(--text);font-family:var(--font);font-size:14
   <div class="topbar">
     <h1>Estoque</h1>
     <div class="topbar-right">
-      <button class="btn btn-primary" onclick="openModalEntrada()">+ Lançar entrada</button>
+      <button class="btn btn-primary btn-sm" onclick="openEntrada()">+ Entrada</button>
     </div>
   </div>
   <div id="est-alert"></div>
   <div class="card">
     <div class="card-header">
-      <span class="card-title">SKUs cadastrados</span>
+      <span class="card-title">SKUs</span>
       <div class="flex gap8 items-center">
-        <input class="form-input" style="width:220px" placeholder="Buscar SKU..." oninput="renderEstoque(this.value)" id="busca-sku">
-        <select class="form-select" style="width:auto" onchange="renderEstoque(document.getElementById('busca-sku').value, this.value)" id="filtro-est">
+        <input class="form-input" style="width:200px" placeholder="Buscar SKU..." oninput="renderEstoque(this.value)" id="busca-sku">
+        <select class="form-select" style="width:auto" id="filtro-est" onchange="renderEstoque()">
           <option value="">Todos</option>
           <option value="neg">Negativos</option>
+          <option value="crit">Críticos</option>
           <option value="pos">Positivos</option>
-          <option value="zero">Zerados</option>
         </select>
       </div>
     </div>
-    <table class="table">
-      <thead><tr><th>SKU</th><th>Descrição</th><th>Saldo</th><th>Entradas</th><th>Saídas</th><th>Ação</th></tr></thead>
-      <tbody id="est-tbody"></tbody>
-    </table>
+    <table class="table"><thead><tr><th>SKU</th><th>Saldo</th><th>Mín. segurança</th><th>Dias restantes</th><th>Status</th><th>Ação</th></tr></thead>
+    <tbody id="est-tbody"></tbody></table>
   </div>
+</div>
+
+<!-- NECESSIDADE DE PRODUÇÃO -->
+<div id="page-necessidade" class="page">
+  <div class="topbar">
+    <div>
+      <h1>Necessidade de Produção</h1>
+      <div class="text-muted text-sm">O que precisa produzir para fechar todos os pedidos em aberto</div>
+    </div>
+    <div class="topbar-right">
+      <button class="btn btn-primary btn-sm" onclick="calcularNecessidade()">↻ Calcular</button>
+    </div>
+  </div>
+  <div id="nec-container"></div>
+</div>
+
+<!-- PCP -->
+<div id="page-pcp" class="page">
+  <div class="topbar">
+    <h1>PCP — Previsão de Demanda</h1>
+    <div class="topbar-right">
+      <select class="form-select" style="width:auto" id="pcp-periodo" onchange="calcularPCP()">
+        <option value="30">Últimos 30 dias</option>
+        <option value="60">Últimos 60 dias</option>
+        <option value="90" selected>Últimos 90 dias</option>
+      </select>
+      <button class="btn btn-primary btn-sm" onclick="calcularPCP()">⚙ Calcular</button>
+    </div>
+  </div>
+  <div id="pcp-container"></div>
+</div>
+
+<!-- RELATÓRIO SEMANAL -->
+<div id="page-relatorio" class="page">
+  <div class="topbar">
+    <h1>Relatório Semanal</h1>
+    <div class="topbar-right">
+      <input type="week" class="form-input" style="width:auto" id="semana-rel" onchange="renderRelatorio()">
+    </div>
+  </div>
+  <div id="relatorio-container"></div>
 </div>
 
 <!-- CONFIG -->
 <div id="page-config" class="page">
   <div class="topbar"><h1>Configurações</h1></div>
   <div class="card" style="max-width:500px">
-    <div class="card-header"><span class="card-title">Conexão Shoppub</span></div>
+    <div class="card-header"><span class="card-title">Servidor</span></div>
     <div style="padding:18px">
       <div class="form-group">
-        <label class="form-label">URL do servidor backend</label>
+        <label class="form-label">URL do backend (Railway)</label>
         <input class="form-input" id="cfg-backend" placeholder="https://grafitte-backend-production.up.railway.app">
       </div>
       <div style="margin-bottom:14px;display:flex;align-items:center;gap:10px">
-        <button class="btn btn-ghost btn-sm" onclick="testarConexao()">⚡ Testar conexão</button>
+        <button class="btn btn-ghost btn-sm" onclick="testarConexao()">⚡ Testar</button>
         <span id="teste-res" style="font-size:12px"></span>
       </div>
       <div class="form-group">
@@ -341,8 +391,12 @@ body{background:var(--bg);color:var(--text);font-family:var(--font);font-size:14
         <input class="form-input" type="number" id="cfg-prazo" value="3" min="1" max="30">
       </div>
       <div class="form-group">
-        <label class="form-label">Prazo com bordado (dias úteis)</label>
-        <input class="form-input" type="number" id="cfg-prazo-bord" value="5" min="1" max="30">
+        <label class="form-label">Lead time de produção (dias)</label>
+        <input class="form-input" type="number" id="cfg-lead" value="7" min="1" max="30">
+      </div>
+      <div class="form-group">
+        <label class="form-label">Estoque de segurança (dias)</label>
+        <input class="form-input" type="number" id="cfg-seg" value="7" min="1" max="60">
       </div>
       <button class="btn btn-primary" onclick="salvarConfig()">Salvar</button>
     </div>
@@ -352,13 +406,10 @@ body{background:var(--bg);color:var(--text);font-family:var(--font);font-size:14
 </main>
 </div>
 
-<!-- MODAL DETALHE PEDIDO -->
+<!-- MODAL DETALHE -->
 <div class="modal-overlay" id="modal-pedido">
-  <div class="modal modal-lg">
-    <div class="modal-header">
-      <span class="modal-title" id="mp-title">Pedido</span>
-      <button class="modal-close" onclick="closeModal('modal-pedido')">✕</button>
-    </div>
+  <div class="modal">
+    <div class="modal-header"><span class="modal-title" id="mp-title">Pedido</span><button class="modal-close" onclick="closeModal('modal-pedido')">✕</button></div>
     <div class="modal-body" id="mp-body"></div>
     <div class="modal-footer">
       <button class="btn btn-ghost" onclick="closeModal('modal-pedido')">Fechar</button>
@@ -368,50 +419,56 @@ body{background:var(--bg);color:var(--text);font-family:var(--font);font-size:14
 </div>
 
 <!-- MODAL CHECKLIST EMBALAGEM -->
-<div class="modal-overlay" id="modal-checklist">
-  <div class="modal modal-lg">
-    <div class="modal-header" style="background:rgba(0,229,160,.05);border-bottom:2px solid var(--accent)">
-      <div>
-        <span class="modal-title" id="chk-title">Checklist de Embalagem</span>
-        <div style="font-size:11px;color:var(--muted);margin-top:3px">Confirme cada item antes de despachar</div>
-      </div>
-      <button class="modal-close" onclick="closeModal('modal-checklist')">✕</button>
+<div class="modal-overlay" id="modal-chk">
+  <div class="modal">
+    <div class="modal-header" style="border-bottom:2px solid var(--accent)">
+      <div><span class="modal-title" id="chk-title">Checklist</span><div style="font-size:11px;color:var(--muted);margin-top:2px">Confirme cada item antes de despachar</div></div>
+      <button class="modal-close" onclick="closeModal('modal-chk')">✕</button>
     </div>
     <div class="modal-body" id="chk-body"></div>
-    <div class="modal-footer" style="background:rgba(0,229,160,.03)">
-      <button class="btn btn-ghost" onclick="closeModal('modal-checklist')">Cancelar</button>
-      <button class="btn btn-primary" id="chk-btn-despachar" disabled onclick="confirmarDespacho()">
-        ✓ Confirmar e Despachar
-      </button>
+    <div class="modal-footer">
+      <button class="btn btn-ghost" onclick="closeModal('modal-chk')">Cancelar</button>
+      <button class="btn btn-primary" id="chk-btn" disabled onclick="confirmarDespacho()">✓ Confirmar e Despachar</button>
     </div>
   </div>
 </div>
 
-<!-- MODAL ENTRADA ESTOQUE -->
+<!-- MODAL ENTRADA ESTOQUE (LOTE) -->
 <div class="modal-overlay" id="modal-entrada">
-  <div class="modal">
+  <div class="modal" style="width:680px">
     <div class="modal-header">
-      <span class="modal-title">Lançar entrada de estoque</span>
+      <div>
+        <span class="modal-title">Lançar entrada de estoque</span>
+        <div style="font-size:11px;color:var(--muted);margin-top:2px">Lote de produção — adicione vários SKUs de uma vez</div>
+      </div>
       <button class="modal-close" onclick="closeModal('modal-entrada')">✕</button>
     </div>
     <div class="modal-body">
       <div class="form-group">
-        <label class="form-label">SKU</label>
-        <input class="form-input" id="ent-sku" placeholder="Ex: PIJ-MAS-TECH-PRETO-P" list="sku-list-datalist">
-        <datalist id="sku-list-datalist"></datalist>
+        <label class="form-label">Identificação do lote (opcional)</label>
+        <input class="form-input" id="ent-lote" placeholder="Ex: Lote #12 — Junho 2026">
       </div>
-      <div class="form-group">
-        <label class="form-label">Quantidade</label>
-        <input class="form-input" type="number" id="ent-qtd" value="1" min="1">
+      <div style="background:var(--bg3);border:1px solid var(--border2);border-radius:8px;padding:14px;margin-bottom:12px">
+        <div style="font-size:12px;font-weight:600;color:var(--muted);margin-bottom:10px">Adicionar item ao lote</div>
+        <div style="display:flex;gap:8px;align-items:flex-end">
+          <div style="flex:2">
+            <label class="form-label">SKU</label>
+            <input class="form-input" id="ent-sku" placeholder="PIJ-FEM-TECH-PRETO-P" list="dl-skus" onkeydown="if(event.key==='Enter')addItemLote()">
+            <datalist id="dl-skus"></datalist>
+          </div>
+          <div style="flex:1">
+            <label class="form-label">Quantidade</label>
+            <input class="form-input" type="number" id="ent-qtd" value="1" min="1" onkeydown="if(event.key==='Enter')addItemLote()">
+          </div>
+          <button class="btn btn-ghost btn-sm" onclick="addItemLote()" style="margin-bottom:1px">+ Adicionar</button>
+        </div>
       </div>
-      <div class="form-group">
-        <label class="form-label">Observação (opcional)</label>
-        <input class="form-input" id="ent-obs" placeholder="Ex: Produção batch #12">
-      </div>
+      <div id="lote-itens" style="max-height:280px;overflow-y:auto"></div>
+      <div id="lote-total" style="text-align:right;font-size:12px;color:var(--muted);margin-top:8px"></div>
     </div>
     <div class="modal-footer">
       <button class="btn btn-ghost" onclick="closeModal('modal-entrada')">Cancelar</button>
-      <button class="btn btn-primary" onclick="lancarEntrada()">Confirmar entrada</button>
+      <button class="btn btn-primary" onclick="confirmarLote()" id="btn-confirmar-lote" disabled>✓ Confirmar lote</button>
     </div>
   </div>
 </div>
@@ -421,55 +478,294 @@ body{background:var(--bg);color:var(--text);font-family:var(--font);font-size:14
 // STATE
 // ============================================================
 const STATE = {
-  pedidos: [],
-  estoque: {}, // { 'PIJ-MAS-TECH-PRETO-P': { saldo:0, entradas:[], saidas:[] } }
+  pedidos: [],      // pedidos ativos
+  historico: [],    // todos os pedidos (para PCP)
+  estoque: {},      // { SKU: { saldo, entradas, saidas, minSeguranca } }
   log: [],
   config: {
     backend: 'https://grafitte-backend-production.up.railway.app',
     prazo: 3,
-    prazoBordado: 5
+    leadTime: 7,
+    diasSeguranca: 7
   }
 };
 
-// Feriados nacionais 2025/2026 (YYYY-MM-DD)
-const FERIADOS = [
-  '2025-01-01','2025-04-18','2025-04-21','2025-05-01','2025-09-07',
-  '2025-10-12','2025-11-02','2025-11-15','2025-12-25',
-  '2026-01-01','2026-04-03','2026-04-21','2026-05-01','2026-09-07',
-  '2026-10-12','2026-11-02','2026-11-15','2026-12-25'
-];
+// Feriados 2025/2026
+const FERIADOS = ['2025-01-01','2025-04-18','2025-04-21','2025-05-01','2025-09-07','2025-10-12','2025-11-02','2025-11-15','2025-12-25','2026-01-01','2026-04-03','2026-04-21','2026-05-01','2026-09-07','2026-10-12','2026-11-02','2026-11-15','2026-12-25'];
+
+// Status ativos (pedidos que precisam de atenção)
+const STATUS_ATIVOS = [0, 1, 6, 7, 12, 13, 14]; // pago, em sep, prod, preparando
+const STATUS_DESP = [3, 4, 5]; // entregue, despachado, NF emitida
 
 // ============================================================
-// NAVEGAÇÃO
+// SKU GENERATION
 // ============================================================
-function goTo(page) {
-  document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
-  document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
-  document.getElementById('page-' + page).classList.add('active');
-  const nav = [...document.querySelectorAll('.nav-item')].find(n => n.onclick?.toString().includes(`'${page}'`));
-  if (nav) nav.classList.add('active');
-  const renders = { pedidos: renderPedidos, separacao: () => renderFila('separacao'), bordado: () => renderFila('bordado'), embalagem: () => renderFila('embalagem'), estoque: renderEstoque, config: loadConfig };
-  if (renders[page]) renders[page]();
+function normSKU(s) {
+  const subs = {'á':'A','à':'A','â':'A','ã':'A','é':'E','ê':'E','í':'I','ó':'O','ô':'O','õ':'O','ú':'U','ç':'C'};
+  return s.split('').map(c => subs[c.toLowerCase()] || c.toUpperCase()).join('').replace(/[^A-Z0-9]/g,'');
+}
+
+function extrairTamanho(nome) {
+  const m = nome.match(/[- ](PP|P|M|GG|G|XG)\s*$/i);
+  return m ? m[1].toUpperCase() : '';
+}
+
+function gerarSKU(nome) {
+  if (!nome) return 'SEM-SKU';
+  const n = nome.toLowerCase();
+  const tipo = n.includes('pijama') ? 'PIJ' : n.includes('jaleco') ? 'JAL' : 'OUT';
+  const genero = n.includes('feminino') ? 'FEM' : n.includes('masculino') ? 'MAS' : 'UNI';
+  const tecido = (n.includes('gabardine')||n.includes('gabardina')) ? 'GAB' : 'TECH';
+  let subtipo = '';
+  if (tipo === 'JAL') {
+    if (n.includes('manga curta')) subtipo = 'MC';
+    else if (n.includes('manga longa')) subtipo = 'ML';
+    else if (n.includes('ziper')||n.includes('zíper')) subtipo = 'ZIP';
+    else if (n.includes('gola padre')||n.includes('padre')) subtipo = 'GP';
+    else if (n.includes('botao embutido')||n.includes('botão embutido')) subtipo = 'BTN';
+    else if (n.includes('acinturado')) subtipo = 'ACIN';
+  }
+  const tam = extrairTamanho(nome);
+  let cor = nome;
+  if (tam) cor = cor.replace(new RegExp('[- ]' + tam + '\\s*$','i'),'');
+  [/pijama\s+cir[uú]rgico/gi,/jaleco/gi,/feminino/gi,/masculino/gi,/scrub\s+conjunto/gi,/scrub/gi,/conjunto/gi,/em\s+gabardine/gi,/de\s+z[ií]per/gi,/gabardine/gi,/gabardina/gi,/manga\s+curta/gi,/manga\s+longa/gi,/gola\s+padre/gi,/com\s+bot[aã]o\s+embutido/gi,/bot[aã]o\s+embutido/gi,/z[ií]per/gi,/acinturado/gi,/tech/gi,/\bem\b/gi,/\bde\b/gi,/\bdo\b/gi,/\bda\b/gi,/scrub\s+gabardine/gi].forEach(r => cor = cor.replace(r,' '));
+  cor = cor.replace(/\s*-\s*/g,' ').replace(/\s+/g,' ').trim();
+  const partes = [tipo, genero, tecido];
+  if (subtipo) partes.push(subtipo);
+  if (cor) partes.push(normSKU(cor));
+  if (tam) partes.push(tam);
+  return partes.join('-');
 }
 
 // ============================================================
-// DATAS E PRAZOS
+// PARSE COMPLEMENTO SHOPPUB
+// Formato: "[['label\n', 'valor', 'True', 'id', 'preco'], ...]"
+// ============================================================
+function parseComplemento(str) {
+  if (!str || str === '[]') return [];
+  const items = [];
+  const re = /\['((?:[^'\\]|\\.)*)'\s*,\s*'((?:[^'\\]|\\.)*)'\s*,\s*'[^']*'\s*,\s*'([^']*)'\s*,\s*'[^']*'\]/g;
+  let m;
+  while ((m = re.exec(str)) !== null) {
+    items.push({
+      label: m[1].replace(/\\n/g,' ').replace(/\n/g,' ').replace(/\s+/g,' ').trim(),
+      valor: m[2].replace(/\\n/g,' ').trim(),
+      id: m[3]
+    });
+  }
+  if (items.length === 0) {
+    const re2 = /\['([^']*)'\s*,\s*'([^']*)'/g;
+    let m2;
+    while ((m2 = re2.exec(str)) !== null) {
+      const label = m2[1].replace(/\\n/g,' ').replace(/\n/g,' ').trim();
+      if (label) items.push({ label, valor: m2[2].trim(), id: '' });
+    }
+  }
+  return items;
+}
+
+function parseBordado(items) {
+  const b = { temBordado: false, nome: '', profissao: '', tipografia: '', cor: '', brasao: '', posicao: '' };
+  items.forEach(item => {
+    const l = item.label.toLowerCase();
+    const v = item.valor.trim();
+    if (!v) return;
+    if ((l.includes('bordado') && l.includes('nome')) || l.includes('bordado (nome)')) { b.nome = v; b.temBordado = true; }
+    else if (l.includes('profiss') && !v.toLowerCase().includes('ficar')) { b.profissao = v; b.temBordado = true; }
+    else if (l.includes('tipografia')) b.tipografia = v.replace(/^\s*/,'');
+    else if (l.includes('cor da letr')) b.cor = v.replace(/^\s*/,'');
+    else if (l.includes('bras') && l.includes('curso')) { b.brasao = 'Sim'; b.temBordado = true; }
+    else if (l.includes('posi') && l.includes('bras')) b.posicao = v.replace(/^\s*/,'');
+  });
+  return b;
+}
+
+function getCoresPijamas(items) {
+  return items.filter(i => {
+    const l = i.label.toLowerCase().replace(/\s+/g,' ').trim();
+    return l.includes('pijama') && i.valor && i.valor.trim();
+  });
+}
+
+// ============================================================
+// PROCESSAR PEDIDO
+// ============================================================
+function processarItem(item, statusPedido) {
+  const titulo = item.produto_nome || '';
+  const textoComp = typeof item.complemento === 'string' ? item.complemento : JSON.stringify(item.complemento || '');
+  const compItems = parseComplemento(textoComp);
+  const bordado = parseBordado(compItems);
+  const tamanho = item.atributo_valor || extrairTamanho(titulo);
+  const isKit = titulo.toLowerCase().includes('kit');
+  const itens = [];
+
+  if (isKit) {
+    const cores = getCoresPijamas(compItems);
+    if (cores.length > 0) {
+      cores.forEach((ci, idx) => {
+        const cor = ci.valor.trim();
+        const generoStr = titulo.toLowerCase().includes('feminino') ? 'Feminino' : 'Masculino';
+        const tecidoStr = titulo.toLowerCase().includes('gabardine') ? 'Gabardine' : 'Scrub Conjunto Tech';
+        const nomeInd = `Pijama Cirúrgico ${generoStr} ${tecidoStr} ${cor}-${tamanho}`;
+        const sku = gerarSKU(nomeInd);
+        itens.push({ nome: nomeInd, sku, cor, tamanho, qtd: 1, deKit: titulo, numero: idx + 1 });
+      });
+    } else {
+      itens.push({ nome: titulo, sku: 'KIT-SEM-COR', cor: '?', tamanho, qtd: 1, deKit: titulo, numero: 1 });
+    }
+  } else {
+    const sku = gerarSKU(titulo);
+    const qtd = item.quantidade || 1;
+    // Extrai cor do nome
+    let cor = titulo;
+    [/pijama\s+cir[uú]rgico/gi,/jaleco/gi,/feminino/gi,/masculino/gi,/scrub\s+conjunto/gi,/scrub/gi,/conjunto/gi,/em\s+gabardine/gi,/gabardine/gi,/tech/gi].forEach(r => cor = cor.replace(r,' '));
+    cor = cor.replace(new RegExp('[- ]' + (tamanho||'XX') + '\\s*$','i'),'').replace(/\s+/g,' ').trim();
+    itens.push({ nome: titulo, sku, cor, tamanho, qtd, deKit: null, numero: 1 });
+  }
+
+  return { itens, bordado };
+}
+
+function processarPedidos(raw, modoHistorico = false) {
+  let novos = 0;
+  raw.forEach(p => {
+    const id = String(p.id);
+    const statusSite = p.status || 0;
+    const statusRes = p.status_resumido || 0;
+
+    if (modoHistorico) {
+      // Histórico: guarda todos para PCP
+      if (!STATE.historico.find(x => x.id === id)) {
+        STATE.historico.push(criarPedido(p, id, statusSite));
+        novos++;
+      }
+      return;
+    }
+
+    // Modo ativo: processa todos exceto cancelados
+    if (STATE.pedidos.find(x => x.id === id)) return;
+    if (statusSite === 2) return; // cancelado — ignora
+
+    const pedido = criarPedido(p, id, statusSite);
+
+    // Sempre adiciona à lista (ativos e despachados para histórico)
+    STATE.pedidos.push(pedido);
+
+    // Baixa no estoque apenas dos não-despachados
+    if (pedido.status !== 'despachado') {
+      pedido.itens.forEach(item => baixarEstoque(item.sku, item.qtd));
+    }
+
+    // Também guarda no histórico
+    if (!STATE.historico.find(x => x.id === id)) {
+      STATE.historico.push(pedido);
+    }
+
+    novos++;
+    const tags = [];
+    if (pedido.itens.some(i => i.deKit)) tags.push('kit');
+    if (pedido.bordado.temBordado) tags.push('bordado');
+    const statusLabel = pedido.statusSiteLabel || '';
+    addLog(`#${pedido.numero} [${statusLabel}] — ${pedido.cliente} · ${pedido.itens.length} peças${tags.length?' · '+tags.join(', '):''}`, pedido.status==='despachado'?'info':'success');
+  });
+  return novos;
+}
+
+function criarPedido(p, id, statusSite) {
+  const todasItens = [];
+  let bordadoGeral = { temBordado: false };
+
+  (p.pedidoitem_set || []).forEach(item => {
+    const { itens, bordado } = processarItem(item, statusSite);
+    todasItens.push(...itens);
+    if (bordado.temBordado) bordadoGeral = bordado;
+  });
+
+  const dataPag = new Date(`${p.data}T${p.hora || '12:00:00'}`);
+  const numeroCurto = String(p.shoppub_id || p.id).split('-').pop();
+
+  // Define etapa inicial baseado no status do site
+  // 0,1=pago → separacao
+  // 6=em separação → separacao
+  // 7=em produção → separacao
+  // 13=em customização → bordado
+  // 12=preparando envio → embalagem
+  // 3,4=entregue/despachado → despachado (histórico)
+  // 2=cancelado → ignorar
+  let etapaInicial = 'separacao';
+  if ([3, 4, 5].includes(statusSite)) etapaInicial = 'despachado';
+  else if (statusSite === 12) etapaInicial = 'embalagem';
+  else if (statusSite === 13) etapaInicial = 'bordado';
+
+  const statusSiteLabel = {
+    0: 'Aberto', 1: 'Pago', 2: 'Cancelado', 3: 'Entregue',
+    4: 'Despachado', 5: 'NF Emitida', 6: 'Em Separação',
+    7: 'Em Produção', 12: 'Preparando Envio', 13: 'Em Customização'
+  }[statusSite] || String(statusSite);
+
+  return {
+    id,
+    numero: numeroCurto,
+    numeroCompleto: p.shoppub_id || String(p.id),
+    cliente: p.cliente_nome || 'Cliente',
+    email: p.email || '',
+    itens: todasItens,
+    bordado: bordadoGeral,
+    status: etapaInicial,
+    statusSite,
+    statusSiteLabel,
+    etapas: {
+      separacao: etapaInicial !== 'separacao',
+      bordado: bordadoGeral.temBordado ? (etapaInicial === 'embalagem' || etapaInicial === 'despachado') : null,
+      embalagem: etapaInicial === 'despachado'
+    },
+    createdAt: dataPag,
+    prazoMaxDias: bordadoGeral.temBordado ? STATE.config.prazo + 2 : STATE.config.prazo,
+    total: parseFloat(p.valor_total) || 0,
+    entrega: { cep: p.entrega_cep, cidade: p.entrega_cidade, estado: p.entrega_estado }
+  };
+}
+
+// ============================================================
+// ESTOQUE
+// ============================================================
+function baixarEstoque(sku, qtd) {
+  if (!STATE.estoque[sku]) STATE.estoque[sku] = { saldo: 0, entradas: [], saidas: [], minSeguranca: 0 };
+  STATE.estoque[sku].saldo -= qtd;
+  STATE.estoque[sku].saidas.push({ qtd, data: new Date() });
+}
+
+function confirmarEntrada() {
+  const sku = document.getElementById('ent-sku').value.trim().toUpperCase();
+  const qtd = parseInt(document.getElementById('ent-qtd').value);
+  const obs = document.getElementById('ent-obs').value.trim();
+  if (!sku || !qtd) return;
+  if (!STATE.estoque[sku]) STATE.estoque[sku] = { saldo: 0, entradas: [], saidas: [], minSeguranca: 0 };
+  STATE.estoque[sku].saldo += qtd;
+  STATE.estoque[sku].entradas.push({ qtd, data: new Date(), obs });
+  addLog(`Estoque +${qtd} ${sku}`, 'success');
+  closeModal('modal-entrada');
+  renderEstoque();
+  atualizarBadges();
+  salvarEstado();
+}
+
+function openEntrada(skuPre = '') {
+  document.getElementById('ent-sku').value = skuPre;
+  document.getElementById('ent-qtd').value = '1';
+  document.getElementById('ent-obs').value = '';
+  const dl = document.getElementById('dl-skus');
+  dl.innerHTML = Object.keys(STATE.estoque).sort().map(s => `<option value="${s}">`).join('');
+  openModal('modal-entrada');
+}
+
+// ============================================================
+// DATAS E PRAZO
 // ============================================================
 function isDiaUtil(d) {
   const dia = d.getDay();
   if (dia === 0 || dia === 6) return false;
-  const str = d.toISOString().split('T')[0];
-  return !FERIADOS.includes(str);
-}
-
-function adicionarDiasUteis(data, dias) {
-  const d = new Date(data);
-  let count = 0;
-  while (count < dias) {
-    d.setDate(d.getDate() + 1);
-    if (isDiaUtil(d)) count++;
-  }
-  return d;
+  return !FERIADOS.includes(d.toISOString().split('T')[0]);
 }
 
 function diasUteisPassados(data) {
@@ -477,687 +773,562 @@ function diasUteisPassados(data) {
   const hoje = new Date(); hoje.setHours(0,0,0,0);
   let count = 0;
   const d = new Date(inicio);
-  while (d < hoje) {
-    d.setDate(d.getDate() + 1);
-    if (isDiaUtil(d) && d <= hoje) count++;
-  }
+  while (d < hoje) { d.setDate(d.getDate()+1); if (isDiaUtil(d) && d <= hoje) count++; }
   return count;
 }
 
-function prazoInfo(pedido) {
-  const diasPassados = diasUteisPassados(pedido.createdAt);
-  const diasRestantes = pedido.prazoMaxDias - diasPassados;
-  if (diasRestantes < 0) return { cls: 'late', txt: `${Math.abs(diasRestantes)}d atraso`, atrasado: true };
-  if (diasRestantes === 0) return { cls: 'warn', txt: 'Vence hoje!', atrasado: false };
-  if (diasRestantes === 1) return { cls: 'warn', txt: 'Amanhã', atrasado: false };
-  return { cls: 'ok', txt: `+${diasRestantes}d`, atrasado: false };
+function prazoInfo(p) {
+  const passados = diasUteisPassados(p.createdAt);
+  const restantes = p.prazoMaxDias - passados;
+  if (restantes < 0) return { cls:'late', txt:`${Math.abs(restantes)}d atraso`, atrasado: true };
+  if (restantes === 0) return { cls:'warn', txt:'Hoje!', atrasado: false };
+  if (restantes === 1) return { cls:'warn', txt:'Amanhã', atrasado: false };
+  return { cls:'ok', txt:`+${restantes}d`, atrasado: false };
 }
 
-function formatarData(d) {
-  const data = new Date(d);
-  return data.toLocaleDateString('pt-BR', { weekday: 'long', day: '2-digit', month: '2-digit' });
-}
+function dataChave(d) { return new Date(d).toISOString().split('T')[0]; }
 
-function dataChave(d) {
-  return new Date(d).toISOString().split('T')[0];
-}
-
-// ============================================================
-// PARSER DE COMPLEMENTOS SHOPPUB
-// ============================================================
-// ============================================================
-// GERAÇÃO DE SKU — baseado no nome real do produto da Shoppub
-// ============================================================
-function normalizarTextoSKU(s) {
-  // Remove acentos e normaliza
-  const subs = {'á':'A','à':'A','â':'A','ã':'A','é':'E','ê':'E','í':'I','ó':'O','ô':'O','õ':'O','ú':'U','ç':'C','ü':'U'};
-  return s.split('').map(c => subs[c.toLowerCase()] || c.toUpperCase()).join('').replace(/[^A-Z0-9]/g,'');
-}
-
-function extrairTamanho(nome) {
-  const m = nome.match(/[- ](PP|P|M|GG|G|XG|XGG|EXG)\s*$/i);
-  return m ? m[1].toUpperCase() : '';
-}
-
-function gerarSKUdoNome(nome) {
-  if (!nome) return 'SEM-SKU';
-  const n = nome.toLowerCase();
-
-  // Tipo
-  const tipo = n.includes('pijama') ? 'PIJ' : n.includes('jaleco') ? 'JAL' : 'OUT';
-
-  // Gênero
-  const genero = n.includes('feminino') ? 'FEM' : n.includes('masculino') ? 'MAS' : 'UNI';
-
-  // Tecido
-  const tecido = (n.includes('gabardine') || n.includes('gabardina')) ? 'GAB' : 'TECH';
-
-  // Subtipo jaleco
-  let subtipo = '';
-  if (tipo === 'JAL') {
-    if (n.includes('manga curta')) subtipo = 'MC';
-    else if (n.includes('manga longa')) subtipo = 'ML';
-    else if (n.includes('ziper') || n.includes('zíper')) subtipo = 'ZIP';
-    else if (n.includes('gola padre') || n.includes('padre')) subtipo = 'GP';
-    else if (n.includes('botao embutido') || n.includes('botão embutido')) subtipo = 'BTN';
-    else if (n.includes('acinturado')) subtipo = 'ACIN';
-  }
-
-  // Tamanho
-  const tamanho = extrairTamanho(nome);
-
-  // Cor — remove todas as palavras estruturais do nome
-  let cor = nome;
-  if (tamanho) cor = cor.replace(new RegExp('[- ]' + tamanho + '\\s*$', 'i'), '');
-  const remover = [
-    /pijama\s+cir[uú]rgico/gi, /jaleco/gi,
-    /feminino/gi, /masculino/gi,
-    /scrub\s+conjunto/gi, /scrub/gi, /conjunto/gi,
-    /em\s+gabardine/gi, /de\s+z[ií]per/gi,
-    /gabardine/gi, /gabardina/gi,
-    /manga\s+curta/gi, /manga\s+longa/gi,
-    /gola\s+padre/gi,
-    /com\s+bot[aã]o\s+embutido/gi,
-    /bot[aã]o\s+embutido/gi,
-    /z[ií]per/gi,
-    /acinturado/gi,
-    /tech/gi,
-    /\bem\b/gi, /\bde\b/gi, /\bdo\b/gi, /\bda\b/gi,
-    /\b-\s*gabardine/gi,
-    /scrub\s+gabardine/gi,
-  ];
-  remover.forEach(r => { cor = cor.replace(r, ' '); });
-  cor = cor.replace(/\s*-\s*/g, ' ').replace(/\s+/g, ' ').trim();
-
-  // Monta SKU
-  const partes = [tipo, genero, tecido];
-  if (subtipo) partes.push(subtipo);
-  if (cor) partes.push(normalizarTextoSKU(cor));
-  if (tamanho) partes.push(tamanho);
-
-  return partes.join('-');
-}
-
-// Alias para compatibilidade
-function normalizarCor(cor) { return normalizarTextoSKU(cor); }
-function normalizarTecido(t) { return (t.toLowerCase().includes('gabardine') || t.toLowerCase().includes('gabardina')) ? 'GAB' : 'TECH'; }
-function normalizarGenero(t) { return t.toLowerCase().includes('feminino') ? 'FEM' : t.toLowerCase().includes('masculino') ? 'MAS' : 'UNI'; }
-function normalizarTipo(t) { return t.toLowerCase().includes('jaleco') ? 'JAL' : 'PIJ'; }
-function normalizarTipoJaleco(t) {
-  const s = t.toLowerCase();
-  if (s.includes('manga curta')) return 'MC';
-  if (s.includes('ziper')||s.includes('zíper')) return 'ZIP';
-  if (s.includes('padre')) return 'GP';
-  if (s.includes('botao')||s.includes('botão')) return 'BTN';
-  return '';
-}
-function gerarSKU(tipo, genero, tecido, tipoJal, cor, tamanho) {
-  const p = [tipo, genero, tecido];
-  if (tipoJal) p.push(tipoJal);
-  if (cor) p.push(normalizarTextoSKU(cor));
-  if (tamanho) p.push(tamanho);
-  return p.join('-');
-}
-
-function parsearBordado(textoOuArray) {
-  const b = { temBordado: false, nome: '', profissao: '', tipografia: '', cor: '', brasao: '', posicaoBrasao: '' };
-  let texto = '';
-  if (Array.isArray(textoOuArray)) {
-    texto = textoOuArray.map(c => typeof c === 'string' ? c : (c.valor||c.value||c.descricao||c.label||c.nome||JSON.stringify(c))).join(' / ');
-  } else {
-    texto = String(textoOuArray || '');
-  }
-  if (!texto.trim()) return b;
-
-  // Nome — "Bordado do Nome Gratis - Luana Dias"
-  const mNome = texto.match(/bordado[^-]*nome[^-]*-\s*([A-Za-zÀ-ÿ][^/\n]{1,50})/i);
-  if (mNome && mNome[1].trim().length > 1) { b.nome = mNome[1].trim(); b.temBordado = true; }
-
-  // Profissao — "Bordado Profissao Gratis - Farmaceutica"
-  const mProf = texto.match(/profiss[aã]o[^-]*-\s*([A-Za-zÀ-ÿ][^/\n]{1,50})/i);
-  if (mProf && mProf[1].trim().length > 1 && !mProf[1].toLowerCase().includes('ficar')) {
-    b.profissao = mProf[1].trim(); b.temBordado = true;
-  }
-
-  // Tipografia
-  ['Arial','Montpe Curvisa','Times New Roman'].forEach(f => { if (texto.includes(f)) b.tipografia = f; });
-
-  // Cor da letra (evita confundir com cor do pijama)
-  ['Preto','Azul Marinho','Azul Royal','Verde Garden','Cinza','Branco','Dourado','Rosa','Prata','Vinho'].forEach(c => {
-    if (texto.toLowerCase().includes('cor da letra') && texto.includes(c)) b.cor = c;
-    else if (texto.includes('tipografia') && texto.includes(c)) b.cor = c;
-  });
-
-  // Brasão — "Bordado do brasao do seu curso ou profissao - Sim"
-  if (texto.toLowerCase().includes('bras') && (texto.toLowerCase().includes('- sim') || texto.toLowerCase().includes('curso'))) {
-    b.brasao = 'Sim'; b.temBordado = true;
-  }
-
-  // Posição brasão — "Escolha a posicao do bordado - Brasao - Manga direita"
-  const mPos = texto.match(/posicao[^-]*-[^-]*-\s*([A-Za-zÀ-ÿ][^\/\n]{1,40})/i);
-  if (mPos) b.posicaoBrasao = mPos[1].trim();
-  else {
-    ['Manga esquerda','Manga direita','Bolso Do Peito','Bolso do Peito'].forEach(p => {
-      if (texto.toLowerCase().includes(p.toLowerCase())) b.posicaoBrasao = p;
-    });
-  }
-
-  if (b.nome || b.profissao || b.brasao) b.temBordado = true;
-  return b;
-}
-
-// ============================================================
-// PARSE COMPLEMENTO SHOPPUB
-// Formato real: "[['label\n', 'valor', 'True', '167', ''], ...]"
-// ============================================================
-function parseComplementoStr(str) {
-  if (!str || str === '[]') return [];
-  const items = [];
-  // Handle both single and escaped quotes, newlines in labels
-  const re = /\['((?:[^'\\]|\\.)*)'\s*,\s*'((?:[^'\\]|\\.)*)'\s*,\s*'([^']*)'\s*,\s*'([^']*)'\s*,\s*'([^']*)'\]/g;
-  let m;
-  while ((m = re.exec(str)) !== null) {
-    const label = m[1].replace(/\\n/g,' ').replace(/\n/g,' ').replace(/\s+/g,' ').trim();
-    const valor = m[2].replace(/\\n/g,' ').replace(/\n/g,' ').trim();
-    items.push({ label, valor, id: m[4] });
-  }
-  // Fallback: try simpler pattern if nothing found
-  if (items.length === 0) {
-    const re2 = /\['([^']*)'\s*,\s*'([^']*)'/g;
-    let m2;
-    while ((m2 = re2.exec(str)) !== null) {
-      const label = m2[1].replace(/\\n/g,' ').replace(/\n/g,' ').trim();
-      const valor = m2[2].trim();
-      if (label) items.push({ label, valor, id: '' });
-    }
-  }
-  return items;
-}
-
-function parsearBordadoItems(items) {
-  const b = { temBordado: false, nome: '', profissao: '', tipografia: '', cor: '', brasao: '', posicaoBrasao: '' };
-  if (!items || !items.length) return b;
-  items.forEach(item => {
-    const label = (item.label || '').toLowerCase();
-    const valor = (item.valor || '').trim();
-    if (!valor) return;
-    if ((label.includes('bordado') && label.includes('nome')) || label.includes('bordado (nome)')) {
-      b.nome = valor; b.temBordado = true;
-    } else if (label.includes('profiss') && !valor.toLowerCase().includes('ficar')) {
-      b.profissao = valor; b.temBordado = true;
-    } else if (label.includes('tipografia')) {
-      b.tipografia = valor.replace(/^\s*/, '');
-    } else if (label.includes('cor da letr')) {
-      b.cor = valor.replace(/^\s*/, '');
-    } else if (label.includes('bras') && label.includes('curso')) {
-      b.brasao = 'Sim'; b.temBordado = true;
-    } else if (label.includes('posi') && label.includes('bras')) {
-      b.posicaoBrasao = valor.replace(/^\s*/, '');
-    }
-  });
-  return b;
-}
-
-function parsearItensKitFromItems(items) {
-  return items.filter(i => {
-    const l = (i.label || '').toLowerCase().replace(/\s+/g,' ').trim();
-    return l.includes('pijama') && (l.includes('cir') || l.match(/\d+/));
-  });
-}
-
-// ============================================================
-// PROCESSAR PEDIDOS DA SHOPPUB
-// ============================================================
-function processarPedidos(raw) {
-  let novos = 0;
-  raw.forEach(p => {
-    const id = String(p.id);
-    if (STATE.pedidos.find(x => x.id === id)) return;
-
-    const itens = [];
-    let bordado = { temBordado: false };
-
-    (p.pedidoitem_set || []).forEach(item => {
-      const titulo = item.produto_nome || '';
-      const complementosRaw = item.complemento || [];
-
-      // complemento vem como string no formato Python list da Shoppub
-      const textoComp = typeof complementosRaw === 'string' ? complementosRaw : JSON.stringify(complementosRaw || '');
-
-      const tipo = normalizarTipo(titulo);
-      const genero = normalizarGenero(titulo);
-      const tecido = normalizarTecido(titulo);
-      const tipoJal = tipo === 'JAL' ? normalizarTipoJaleco(titulo) : '';
-
-      // Tamanho do atributo_valor do item
-      const tamanho = item.atributo_valor || extrairTamanho(textoComp) || extrairTamanho(titulo);
-
-      // COR do produto individual — vem no complemento como "Cor: Azul Marinho"
-      let corBase = '';
-      const mCorComp = textoComp.match(/\bCor\s*:\s*([A-Za-zÀ-ÿ][^,\/\n]{1,30})/i);
-      if (mCorComp) corBase = mCorComp[1].trim();
-
-      // Detecta bordado
-      const compItems = parseComplementoStr(textoComp);
-      const b = parsearBordadoItems(compItems);
-      if (b.temBordado) { bordado = b; }
-
-      // -------------------------------------------------------
-      // LÓGICA DE SKU
-      // Se "Kit" no título → desmembra pelos complementos
-      // Senão → produto individual → SKU direto do nome
-      // -------------------------------------------------------
-      const isKitPorNome = titulo.toLowerCase().includes('kit');
-
-      if (isKitPorNome) {
-        // Pega as cores de cada pijama nos complementos
-        const compItemsTodos = parseComplementoStr(textoComp);
-        const coresPijamas = compItemsTodos.filter(ci => {
-          const l = (ci.label || '').replace(/\n/g,' ').trim().toLowerCase();
-          return (l.includes('pijama') || l.match(/pijama\s*\d/)) && ci.valor && ci.valor.trim();
-        });
-
-        if (coresPijamas.length > 0) {
-          // Gera SKU individual para cada pijama do kit
-          coresPijamas.forEach((ci, idx) => {
-            const cor = ci.valor.trim();
-            const generoStr = genero === 'FEM' ? 'Feminino' : 'Masculino';
-            const tecidoStr = tecido === 'GAB' ? 'Gabardine' : 'Scrub Conjunto Tech';
-            const nomeIndividual = 'Pijama Cirúrgico ' + generoStr + ' ' + tecidoStr + ' ' + cor + '-' + tamanho;
-            const sku = gerarSKUdoNome(nomeIndividual);
-            itens.push({ nome: nomeIndividual, sku, cor, tamanho, tipo, genero, tecido, qtd: 1, deKit: titulo, numero: idx + 1 });
-            baixarEstoque(sku, 1);
-          });
-        } else {
-          addLog('Kit sem cores: ' + titulo.substring(0,40), 'warn');
-          itens.push({ nome: titulo, sku: 'KIT-SEM-COR-' + tamanho, cor: '?', tamanho, tipo, genero, tecido, qtd: 1, deKit: titulo, numero: 1 });
-        }
-      } else {
-        // Produto individual — SKU direto do nome
-        const sku = gerarSKUdoNome(titulo);
-        const qtd = item.quantidade || 1;
-        itens.push({ nome: titulo, sku, cor: corBase, tamanho, tipo, genero, tecido, qtd, deKit: null, numero: 1 });
-        baixarEstoque(sku, qtd);
-      }
-    });
-
-    const dataPagamento = new Date(`${p.data}T${p.hora || '12:00:00'}`);
-    const prazoMaxDias = bordado.temBordado ? STATE.config.prazoBordado : STATE.config.prazo;
-
-    // Número curto do pedido (só os dígitos após o -)
-    const numeroCurto = String(p.shoppub_id || p.id).split('-').pop();
-
-    const pedido = {
-      id,
-      numero: numeroCurto,
-      numeroCompleto: p.shoppub_id || String(p.id),
-      cliente: p.cliente_nome || 'Cliente',
-      email: p.email || '',
-      itens,
-      bordado,
-      status: 'separacao',
-      etapas: { separacao: false, bordado: bordado.temBordado ? false : null, embalagem: false },
-      createdAt: dataPagamento,
-      prazoMaxDias,
-      total: parseFloat(p.valor_total) || 0,
-      entrega: {
-        destinatario: p.entrega_destinatario, cep: p.entrega_cep,
-        logradouro: p.entrega_logradouro, numero: p.entrega_numero,
-        bairro: p.entrega_bairro, cidade: p.entrega_cidade, estado: p.entrega_estado
-      }
-    };
-
-    STATE.pedidos.push(pedido);
-    novos++;
-
-    const tags = [];
-    if (pedido.itens.some(i => i.deKit)) tags.push('kit');
-    if (bordado.temBordado) tags.push('bordado');
-    addLog(`#${pedido.numero} — ${pedido.cliente}${tags.length ? ' [' + tags.join(', ') + ']' : ''} → separação`, 'success');
-  });
-  return novos;
-}
-
-// ============================================================
-// ESTOQUE
-// ============================================================
-function baixarEstoque(sku, qtd) {
-  if (!STATE.estoque[sku]) STATE.estoque[sku] = { saldo: 0, entradas: [], saidas: [] };
-  STATE.estoque[sku].saldo -= qtd;
-  STATE.estoque[sku].saidas.push({ qtd, data: new Date(), tipo: 'pedido' });
-}
-
-function lancarEntrada() {
-  const sku = document.getElementById('ent-sku').value.trim().toUpperCase();
-  const qtd = parseInt(document.getElementById('ent-qtd').value);
-  const obs = document.getElementById('ent-obs').value.trim();
-  if (!sku || !qtd || qtd < 1) return alert('Preencha SKU e quantidade');
-  if (!STATE.estoque[sku]) STATE.estoque[sku] = { saldo: 0, entradas: [], saidas: [] };
-  STATE.estoque[sku].saldo += qtd;
-  STATE.estoque[sku].entradas.push({ qtd, data: new Date(), obs });
-  addLog(`Estoque +${qtd} em ${sku}${obs ? ' (' + obs + ')' : ''}`, 'success');
-  closeModal('modal-entrada');
-  renderEstoque();
-  atualizarNavBadges();
-}
-
-function openModalEntrada() {
-  document.getElementById('ent-sku').value = '';
-  document.getElementById('ent-qtd').value = '1';
-  document.getElementById('ent-obs').value = '';
-  // Preenche datalist com SKUs conhecidos
-  const dl = document.getElementById('sku-list-datalist');
-  dl.innerHTML = Object.keys(STATE.estoque).map(s => `<option value="${s}">`).join('');
-  openModal('modal-entrada');
-}
-
-function renderEstoque(busca = '', filtro = '') {
-  const f = (document.getElementById('filtro-est')?.value) || filtro;
-  const b = busca.toUpperCase();
-  const tbody = document.getElementById('est-tbody');
-  const skus = Object.keys(STATE.estoque).sort();
-  const filtered = skus.filter(s => {
-    if (b && !s.includes(b)) return false;
-    if (f === 'neg' && STATE.estoque[s].saldo >= 0) return false;
-    if (f === 'pos' && STATE.estoque[s].saldo <= 0) return false;
-    if (f === 'zero' && STATE.estoque[s].saldo !== 0) return false;
-    return true;
-  });
-
-  const negativos = skus.filter(s => STATE.estoque[s].saldo < 0).length;
-  document.getElementById('nav-est').textContent = negativos;
-
-  if (filtered.length === 0) {
-    tbody.innerHTML = '<tr><td colspan="6" style="text-align:center;color:var(--muted);padding:32px">Nenhum SKU encontrado</td></tr>';
-    return;
-  }
-
-  tbody.innerHTML = filtered.map(sku => {
-    const e = STATE.estoque[sku];
-    const cls = e.saldo < 0 ? 'estoque-neg' : e.saldo > 0 ? 'estoque-pos' : 'estoque-zero';
-    const partes = sku.split('-');
-    const desc = gerarDescricaoSKU(sku);
-    const totalEnt = e.entradas.reduce((a,x) => a + x.qtd, 0);
-    const totalSai = e.saidas.reduce((a,x) => a + x.qtd, 0);
-    return `<tr>
-      <td class="mono" style="font-size:12px">${sku}</td>
-      <td class="text-sm text-muted">${desc}</td>
-      <td class="${cls} mono" style="font-size:15px">${e.saldo > 0 ? '+' : ''}${e.saldo}</td>
-      <td class="mono text-sm" style="color:var(--accent)">+${totalEnt}</td>
-      <td class="mono text-sm" style="color:var(--danger)">-${totalSai}</td>
-      <td><button class="btn btn-ghost btn-sm" onclick="quickEntrada('${sku}')">+ Entrada</button></td>
-    </tr>`;
-  }).join('');
-
-  // Alert de negativos
-  const estAlert = document.getElementById('est-alert');
-  if (negativos > 0) {
-    estAlert.innerHTML = `<div class="alert alert-danger" style="margin-bottom:14px">⚠ ${negativos} SKU(s) com saldo negativo — necessário produção ou reposição</div>`;
-  } else {
-    estAlert.innerHTML = '';
-  }
-}
-
-function quickEntrada(sku) {
-  document.getElementById('ent-sku').value = sku;
-  document.getElementById('ent-qtd').value = '1';
-  document.getElementById('ent-obs').value = '';
-  openModal('modal-entrada');
-}
-
-function gerarDescricaoSKU(sku) {
-  const p = sku.split('-');
-  const tipo = p[0] === 'PIJ' ? 'Pijama Cirúrgico' : p[0] === 'JAL' ? 'Jaleco' : p[0];
-  const genero = p[1] === 'MAS' ? 'Masc.' : p[1] === 'FEM' ? 'Fem.' : p[1] || '';
-  const tecido = p[2] || '';
-  const resto = p.slice(3).join(' ');
-  return [tipo, genero, tecido, resto].filter(Boolean).join(' ');
+function formatarData(str) {
+  return new Date(str+'T12:00:00').toLocaleDateString('pt-BR',{weekday:'long',day:'2-digit',month:'2-digit'});
 }
 
 // ============================================================
 // IMPORTAÇÃO
 // ============================================================
-async function importarPedidos() {
+async function importarAtivos() {
   const btn = document.getElementById('btn-import');
   btn.disabled = true;
   btn.innerHTML = '<span class="spinner"></span> Importando...';
-  addLog('Conectando ao servidor...', 'info');
+  addLog('Importando pedidos ativos...', 'info');
 
   try {
     const res = await fetch(`${STATE.config.backend}/api/pedidos`);
     if (!res.ok) throw new Error(`HTTP ${res.status}`);
     const data = await res.json();
-
     if (data.sucesso && data.pedidos?.length > 0) {
-      const novos = processarPedidos(data.pedidos);
-      addLog(`✓ ${novos} pedidos novos importados (${data.total} no total dos últimos 30 dias)`, 'success');
-      document.getElementById('last-sync').textContent = `Última sincronização: ${new Date().toLocaleTimeString('pt-BR')} — ${data.total} pedidos`;
+      const novos = processarPedidos(data.pedidos, false);
+      addLog(`✓ ${novos} pedidos novos importados`, 'success');
+      document.getElementById('last-sync').textContent = `Última sync: ${new Date().toLocaleTimeString('pt-BR')}`;
+      atualizarDashboard();
+      salvarEstado();
     } else {
       addLog(data.mensagem || 'Nenhum pedido novo', 'warn');
     }
   } catch(e) {
-    addLog('Erro na importação: ' + e.message, 'error');
-    showAlert('danger', 'Erro ao conectar ao servidor: ' + e.message);
+    addLog('Erro: ' + e.message, 'error');
+    showAlert('danger', 'Erro ao conectar: ' + e.message);
   }
 
-  atualizarDashboard();
   btn.disabled = false;
-  btn.innerHTML = '↻ Importar pedidos';
+  btn.innerHTML = '↻ Importar pedidos ativos';
+}
+
+async function importarHistorico() {
+  const btn = document.getElementById('btn-hist');
+  btn.disabled = true;
+  btn.innerHTML = '<span class="spinner"></span> Carregando...';
+  addLog('Importando histórico para PCP...', 'info');
+
+  try {
+    // Busca histórico completo — o servidor vai precisar de endpoint específico
+    const res = await fetch(`${STATE.config.backend}/api/historico`);
+    if (!res.ok) throw new Error(`HTTP ${res.status}`);
+    const data = await res.json();
+    if (data.sucesso && data.pedidos?.length > 0) {
+      processarPedidos(data.pedidos, true);
+      addLog(`✓ ${data.pedidos.length} pedidos no histórico`, 'success');
+      salvarEstado();
+    }
+  } catch(e) {
+    addLog('Histórico: ' + e.message, 'warn');
+  }
+
+  btn.disabled = false;
+  btn.innerHTML = '📚 Importar histórico';
 }
 
 // ============================================================
 // DASHBOARD
 // ============================================================
 function atualizarDashboard() {
-  const p = STATE.pedidos;
-  const atrasados = p.filter(x => x.status !== 'despachado' && prazoInfo(x).atrasado);
-  const sep = p.filter(x => x.status === 'separacao');
-  const bord = p.filter(x => x.status === 'bordado');
-  const emb = p.filter(x => x.status === 'embalagem');
+  const ativos = STATE.pedidos.filter(p => p.status !== 'despachado');
+  const atrasados = ativos.filter(p => prazoInfo(p).atrasado);
 
-  document.getElementById('s-total').textContent = p.filter(x => x.status !== 'despachado').length;
-  document.getElementById('s-atrasados').textContent = atrasados.length;
-  document.getElementById('s-sep').textContent = sep.length;
-  document.getElementById('s-bord').textContent = bord.length;
-  document.getElementById('s-emb').textContent = emb.length;
+  // Peças vendidas ontem
+  const ontem = new Date(); ontem.setDate(ontem.getDate()-1);
+  const chaveOntem = dataChave(ontem);
+  const pecasOntem = STATE.pedidos.filter(p => dataChave(p.createdAt) === chaveOntem)
+    .reduce((a, p) => a + p.itens.reduce((b, i) => b + i.qtd, 0), 0);
 
-  atualizarNavBadges();
+  // SKUs críticos
+  const criticos = Object.entries(STATE.estoque).filter(([,e]) => e.saldo < 0).length;
+
+  document.getElementById('s-total').textContent = ativos.length;
+  document.getElementById('s-late').textContent = atrasados.length;
+  document.getElementById('s-pecas').textContent = pecasOntem;
+  document.getElementById('s-criticos').textContent = criticos;
+
+  atualizarBadges();
 
   // Alertas de atraso
-  const ad = document.getElementById('alertas-dash');
+  const aa = document.getElementById('alertas-atraso');
   if (atrasados.length > 0) {
-    ad.innerHTML = atrasados.slice(0, 3).map(x => {
-      const pi = prazoInfo(x);
-      return `<div class="alert alert-danger">⚠ Pedido <strong>#${x.numero}</strong> — ${x.cliente} — <strong>${pi.txt}</strong> — etapa: ${etapaLabel(x.status)}</div>`;
-    }).join('') + (atrasados.length > 3 ? `<div class="alert alert-danger">+${atrasados.length-3} pedidos atrasados</div>` : '');
+    aa.innerHTML = atrasados.slice(0,5).map(p => {
+      const pi = prazoInfo(p);
+      const pecas = p.itens.reduce((a,i) => a+i.qtd, 0);
+      return `<div class="alert alert-danger">⚠ <strong>#${p.numero}</strong> — ${p.cliente} — <strong>${pi.txt}</strong> — ${pecas} peça${pecas>1?'s':''}</div>`;
+    }).join('') + (atrasados.length > 5 ? `<div class="alert alert-warn">+${atrasados.length-5} pedidos atrasados</div>` : '');
   } else {
-    ad.innerHTML = '';
+    aa.innerHTML = ativos.length > 0 ? '<div class="alert alert-success">✓ Nenhum pedido atrasado</div>' : '';
   }
 
-  // Tabela recentes
-  const tbody = document.getElementById('dash-tbody');
-  const recentes = [...p].sort((a,b) => new Date(b.createdAt) - new Date(a.createdAt)).slice(0,8);
-  if (recentes.length === 0) {
-    tbody.innerHTML = '<tr><td colspan="4" style="text-align:center;color:var(--muted);padding:28px">Importe pedidos para começar</td></tr>';
+  // Tabela atrasados
+  const tbody = document.getElementById('dash-atrasados');
+  if (atrasados.length === 0) {
+    tbody.innerHTML = '<tr><td colspan="4" style="text-align:center;color:var(--muted);padding:20px">Sem atrasos ✓</td></tr>';
+  } else {
+    tbody.innerHTML = atrasados.map(p => {
+      const pi = prazoInfo(p);
+      const pecas = p.itens.reduce((a,i) => a+i.qtd, 0);
+      return `<tr>
+        <td class="mono" style="color:var(--accent);cursor:pointer" onclick="abrirDetalhe('${p.id}')">#${p.numero}</td>
+        <td>${p.cliente}</td>
+        <td><span class="prazo late">${pi.txt}</span></td>
+        <td class="mono">${pecas} peça${pecas>1?'s':''}</td>
+      </tr>`;
+    }).join('');
+  }
+}
+
+function atualizarBadges() {
+  const p = STATE.pedidos;
+  document.getElementById('nb-ped').textContent = p.filter(x => x.status !== 'despachado').length;
+  document.getElementById('nb-sep').textContent = p.filter(x => x.status === 'separacao').length;
+  document.getElementById('nb-bord').textContent = p.filter(x => x.status === 'bordado').length;
+  document.getElementById('nb-emb').textContent = p.filter(x => x.status === 'embalagem').length;
+  const pecasOntem = (() => {
+    const ontem = new Date(); ontem.setDate(ontem.getDate()-1);
+    const ch = dataChave(ontem);
+    return STATE.pedidos.filter(x => dataChave(x.createdAt) === ch).reduce((a,x) => a + x.itens.reduce((b,i) => b+i.qtd, 0), 0);
+  })();
+  document.getElementById('nb-pecas').textContent = pecasOntem;
+  const neg = Object.values(STATE.estoque).filter(e => e.saldo < 0).length;
+  document.getElementById('nb-est').textContent = neg;
+}
+
+// ============================================================
+// PEÇAS DO DIA
+// ============================================================
+function renderPecasDia() {
+  const dataSel = document.getElementById('data-pecas').value;
+  const data = dataSel || dataChave(new Date(Date.now() - 86400000)); // ontem por padrão
+  const container = document.getElementById('pecas-dia-container');
+
+  // Agrupa pedidos do dia selecionado
+  const pedidosDia = [...STATE.pedidos, ...STATE.historico.filter(h => !STATE.pedidos.find(p => p.id === h.id))]
+    .filter(p => dataChave(p.createdAt) === data);
+
+  if (pedidosDia.length === 0) {
+    container.innerHTML = `<div class="card" style="padding:32px;text-align:center;color:var(--muted)">Nenhum pedido em ${new Date(data+'T12:00:00').toLocaleDateString('pt-BR')}</div>`;
     return;
   }
-  tbody.innerHTML = recentes.map(x => {
-    const pi = prazoInfo(x);
-    return `<tr>
-      <td class="mono" style="color:var(--accent);cursor:pointer" onclick="abrirDetalhe('${x.id}')">#${x.numero}</td>
-      <td>${x.cliente}</td>
-      <td><span class="badge ${badgeCls(x.status)}">${etapaLabel(x.status)}</span></td>
-      <td><span class="prazo ${pi.cls}">${pi.txt}</span></td>
-    </tr>`;
-  }).join('');
-}
 
-function atualizarNavBadges() {
-  const p = STATE.pedidos;
-  document.getElementById('nav-pedidos').textContent = p.filter(x => x.status !== 'despachado').length;
-  document.getElementById('nav-sep').textContent = p.filter(x => x.status === 'separacao').length;
-  document.getElementById('nav-bord').textContent = p.filter(x => x.status === 'bordado').length;
-  document.getElementById('nav-emb').textContent = p.filter(x => x.status === 'embalagem').length;
-  const negativos = Object.values(STATE.estoque).filter(e => e.saldo < 0).length;
-  document.getElementById('nav-est').textContent = negativos;
+  // Agrupa por SKU
+  const porSKU = {};
+  pedidosDia.forEach(p => {
+    p.itens.forEach(item => {
+      if (!porSKU[item.sku]) porSKU[item.sku] = { qtd: 0, cor: item.cor, tamanho: item.tamanho, pedidos: [] };
+      porSKU[item.sku].qtd += item.qtd;
+      if (!porSKU[item.sku].pedidos.includes(p.numero)) porSKU[item.sku].pedidos.push(p.numero);
+    });
+  });
+
+  const totalPecas = Object.values(porSKU).reduce((a,x) => a + x.qtd, 0);
+  const dataFormatada = new Date(data+'T12:00:00').toLocaleDateString('pt-BR', {weekday:'long', day:'2-digit', month:'2-digit', year:'numeric'});
+
+  container.innerHTML = `
+    <div class="alert alert-info" style="margin-bottom:16px">
+      📦 <strong>${dataFormatada}</strong> — <strong>${totalPecas} peças</strong> em <strong>${pedidosDia.length} pedidos</strong>
+    </div>
+    <div class="card">
+      <div class="card-header">
+        <span class="card-title">Peças por SKU</span>
+        <span class="text-muted text-sm">${totalPecas} peças total</span>
+      </div>
+      <table class="table">
+        <thead><tr><th>SKU</th><th>Cor</th><th>Tam</th><th>Qtde</th><th>Pedidos</th></tr></thead>
+        <tbody>
+          ${Object.entries(porSKU).sort((a,b) => b[1].qtd - a[1].qtd).map(([sku, info]) => `
+            <tr>
+              <td class="mono" style="color:var(--accent);font-size:12px">${sku}</td>
+              <td class="text-sm">${info.cor || '—'}</td>
+              <td class="mono text-sm">${info.tamanho || '—'}</td>
+              <td class="mono" style="font-size:16px;font-weight:600;color:var(--text)">${info.qtd}</td>
+              <td class="text-sm text-muted">${info.pedidos.slice(0,3).map(n => '#'+n).join(', ')}${info.pedidos.length > 3 ? ` +${info.pedidos.length-3}` : ''}</td>
+            </tr>
+          `).join('')}
+        </tbody>
+      </table>
+    </div>`;
 }
 
 // ============================================================
-// PÁGINA DE PEDIDOS — agrupada por dia
+// RELATÓRIO SEMANAL
+// ============================================================
+function renderRelatorio() {
+  const semanaInput = document.getElementById('semana-rel').value;
+  const container = document.getElementById('relatorio-container');
+
+  // Se não tem semana selecionada, pega a semana atual
+  let inicio, fim;
+  if (semanaInput) {
+    const [ano, sem] = semanaInput.split('-W');
+    inicio = new Date(parseInt(ano), 0, 1 + (parseInt(sem)-1)*7);
+    // Ajusta para segunda-feira
+    const dia = inicio.getDay();
+    inicio.setDate(inicio.getDate() - (dia === 0 ? 6 : dia - 1));
+    fim = new Date(inicio); fim.setDate(fim.getDate() + 6);
+  } else {
+    inicio = new Date(); 
+    const dia = inicio.getDay();
+    inicio.setDate(inicio.getDate() - (dia === 0 ? 6 : dia - 1));
+    fim = new Date(inicio); fim.setDate(fim.getDate() + 6);
+  }
+
+  const chaveInicio = dataChave(inicio);
+  const chaveFim = dataChave(fim);
+
+  const todosPedidos = [...STATE.pedidos, ...STATE.historico.filter(h => !STATE.pedidos.find(p => p.id === h.id))];
+  const pedidosSemana = todosPedidos.filter(p => {
+    const ch = dataChave(p.createdAt);
+    return ch >= chaveInicio && ch <= chaveFim;
+  });
+
+  if (pedidosSemana.length === 0) {
+    container.innerHTML = '<div class="card" style="padding:32px;text-align:center;color:var(--muted)">Nenhum pedido nessa semana</div>';
+    return;
+  }
+
+  // Agrupa por SKU
+  const porSKU = {};
+  pedidosSemana.forEach(p => {
+    p.itens.forEach(item => {
+      if (!porSKU[item.sku]) porSKU[item.sku] = { qtd: 0, cor: item.cor, tamanho: item.tamanho };
+      porSKU[item.sku].qtd += item.qtd;
+    });
+  });
+
+  // Agrupa por dia
+  const porDia = {};
+  pedidosSemana.forEach(p => {
+    const ch = dataChave(p.createdAt);
+    if (!porDia[ch]) porDia[ch] = { pedidos: 0, pecas: 0 };
+    porDia[ch].pedidos++;
+    porDia[ch].pecas += p.itens.reduce((a,i) => a+i.qtd, 0);
+  });
+
+  const totalPecas = Object.values(porSKU).reduce((a,x) => a+x.qtd, 0);
+  const periodo = `${inicio.toLocaleDateString('pt-BR')} — ${fim.toLocaleDateString('pt-BR')}`;
+
+  container.innerHTML = `
+    <div class="alert alert-info" style="margin-bottom:16px">
+      📊 Semana de <strong>${periodo}</strong> — <strong>${totalPecas} peças</strong> em <strong>${pedidosSemana.length} pedidos</strong>
+    </div>
+    <div class="grid2">
+      <div class="card">
+        <div class="card-header"><span class="card-title">Por dia</span></div>
+        <table class="table">
+          <thead><tr><th>Data</th><th>Pedidos</th><th>Peças</th></tr></thead>
+          <tbody>
+            ${Object.entries(porDia).sort().map(([ch, d]) => `
+              <tr>
+                <td class="text-sm">${new Date(ch+'T12:00:00').toLocaleDateString('pt-BR',{weekday:'short',day:'2-digit',month:'2-digit'})}</td>
+                <td class="mono">${d.pedidos}</td>
+                <td class="mono" style="font-weight:600;color:var(--accent)">${d.pecas}</td>
+              </tr>
+            `).join('')}
+            <tr style="border-top:2px solid var(--border2)">
+              <td style="font-weight:600">Total</td>
+              <td class="mono" style="font-weight:600">${pedidosSemana.length}</td>
+              <td class="mono" style="font-weight:600;color:var(--accent)">${totalPecas}</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+      <div class="card">
+        <div class="card-header"><span class="card-title">Top SKUs da semana</span></div>
+        <table class="table">
+          <thead><tr><th>SKU</th><th>Qtde</th><th>%</th></tr></thead>
+          <tbody>
+            ${Object.entries(porSKU).sort((a,b) => b[1].qtd-a[1].qtd).slice(0,10).map(([sku,info]) => `
+              <tr>
+                <td class="mono" style="font-size:11px;color:var(--accent)">${sku}</td>
+                <td class="mono" style="font-weight:600">${info.qtd}</td>
+                <td class="mono text-sm text-muted">${Math.round(info.qtd/totalPecas*100)}%</td>
+              </tr>
+            `).join('')}
+          </tbody>
+        </table>
+      </div>
+    </div>
+    <div class="card">
+      <div class="card-header"><span class="card-title">Todos os SKUs</span></div>
+      <table class="table">
+        <thead><tr><th>SKU</th><th>Cor</th><th>Tamanho</th><th>Qtde</th><th>% do total</th></tr></thead>
+        <tbody>
+          ${Object.entries(porSKU).sort((a,b) => b[1].qtd-a[1].qtd).map(([sku,info]) => `
+            <tr>
+              <td class="mono" style="font-size:11px;color:var(--accent)">${sku}</td>
+              <td class="text-sm">${info.cor||'—'}</td>
+              <td class="mono text-sm">${info.tamanho||'—'}</td>
+              <td class="mono" style="font-weight:600">${info.qtd}</td>
+              <td>
+                <div style="display:flex;align-items:center;gap:6px">
+                  <div style="width:60px;height:4px;background:var(--border2);border-radius:4px;overflow:hidden">
+                    <div style="width:${Math.round(info.qtd/totalPecas*100)}%;height:100%;background:var(--accent);border-radius:4px"></div>
+                  </div>
+                  <span class="mono text-sm text-muted">${Math.round(info.qtd/totalPecas*100)}%</span>
+                </div>
+              </td>
+            </tr>
+          `).join('')}
+        </tbody>
+      </table>
+    </div>`;
+}
+
+// ============================================================
+// PCP — PREVISÃO DE DEMANDA
+// ============================================================
+function calcularPCP() {
+  const dias = parseInt(document.getElementById('pcp-periodo').value) || 90;
+  const container = document.getElementById('pcp-container');
+  const corte = new Date(); corte.setDate(corte.getDate() - dias);
+  const chCorte = dataChave(corte);
+
+  const todosPedidos = [...STATE.pedidos, ...STATE.historico.filter(h => !STATE.pedidos.find(p => p.id === h.id))];
+  const pedidosPeriodo = todosPedidos.filter(p => dataChave(p.createdAt) >= chCorte);
+
+  if (pedidosPeriodo.length === 0) {
+    container.innerHTML = '<div class="card" style="padding:32px;text-align:center;color:var(--muted)">Sem dados suficientes. Importe o histórico primeiro.</div>';
+    return;
+  }
+
+  // Calcula vendas por SKU no período
+  const porSKU = {};
+  pedidosPeriodo.forEach(p => {
+    p.itens.forEach(item => {
+      if (!porSKU[item.sku]) porSKU[item.sku] = { qtd: 0, cor: item.cor, tamanho: item.tamanho };
+      porSKU[item.sku].qtd += item.qtd;
+    });
+  });
+
+  const diasUteis = Math.round(dias * 5/7); // aproximação
+  const lead = STATE.config.leadTime;
+  const seg = STATE.config.diasSeguranca;
+
+  // Para cada SKU: média diária, previsão 7 dias, ponto de reposição, sugestão de corte
+  const skus = Object.entries(porSKU).map(([sku, info]) => {
+    const mediaDiaria = info.qtd / diasUteis;
+    const previsao7d = Math.ceil(mediaDiaria * 7);
+    const pontoReposicao = Math.ceil(mediaDiaria * (lead + seg));
+    const estoqueAtual = STATE.estoque[sku]?.saldo || 0;
+    const sugestaoCorte = Math.max(0, pontoReposicao - estoqueAtual + previsao7d);
+    const diasEstoque = estoqueAtual > 0 ? Math.floor(estoqueAtual / mediaDiaria) : 0;
+    const status = estoqueAtual < 0 ? 'critico' : estoqueAtual < pontoReposicao ? 'cortar' : 'ok';
+    return { sku, ...info, mediaDiaria, previsao7d, pontoReposicao, estoqueAtual, sugestaoCorte, diasEstoque, status };
+  }).sort((a,b) => {
+    const ordem = { critico: 0, cortar: 1, ok: 2 };
+    return (ordem[a.status] - ordem[b.status]) || b.mediaDiaria - a.mediaDiaria;
+  });
+
+  const totalCorte = skus.reduce((a,s) => a + s.sugestaoCorte, 0);
+  const criticos = skus.filter(s => s.status === 'critico').length;
+  const cortar = skus.filter(s => s.status === 'cortar').length;
+
+  container.innerHTML = `
+    <div class="grid2" style="margin-bottom:16px">
+      <div class="stat"><div class="stat-label">Total a cortar (semana)</div><div class="stat-value" style="color:var(--warn)">${totalCorte}</div><div class="stat-sub">peças necessárias</div></div>
+      <div class="stat"><div class="stat-label">SKUs críticos</div><div class="stat-value" style="color:var(--danger)">${criticos}</div><div class="stat-sub">estoque negativo</div></div>
+    </div>
+    <div class="card">
+      <div class="card-header">
+        <span class="card-title">Lista de corte — próxima semana</span>
+        <span class="text-muted text-sm">Baseado nos últimos ${dias} dias · Lead time ${lead}d · Seg. ${seg}d</span>
+      </div>
+      <table class="table">
+        <thead><tr><th>SKU</th><th>Média/dia</th><th>Prev. 7d</th><th>Estoque atual</th><th>Cortar agora</th><th>Status</th></tr></thead>
+        <tbody>
+          ${skus.map(s => `
+            <tr style="${s.status === 'critico' ? 'background:rgba(239,68,68,.04)' : s.status === 'cortar' ? 'background:rgba(245,158,11,.03)' : ''}">
+              <td class="mono" style="font-size:11px;color:var(--accent)">${s.sku}</td>
+              <td class="mono text-sm">${s.mediaDiaria.toFixed(1)}</td>
+              <td class="mono text-sm">${s.previsao7d}</td>
+              <td class="mono ${s.estoqueAtual < 0 ? 'est-neg' : s.estoqueAtual === 0 ? 'est-zero' : 'est-pos'}">${s.estoqueAtual > 0 ? '+' : ''}${s.estoqueAtual}</td>
+              <td class="mono" style="font-weight:600;font-size:16px;color:${s.sugestaoCorte > 0 ? 'var(--warn)' : 'var(--muted)'}">${s.sugestaoCorte > 0 ? s.sugestaoCorte : '—'}</td>
+              <td>
+                ${s.status === 'critico' ? '<span class="badge b-late">🔴 Crítico</span>' : s.status === 'cortar' ? '<span class="badge" style="background:rgba(245,158,11,.15);color:var(--warn)">⚠ Cortar</span>' : '<span class="badge b-ok">✓ Ok</span>'}
+              </td>
+            </tr>
+          `).join('')}
+        </tbody>
+      </table>
+    </div>`;
+}
+
+// ============================================================
+// PEDIDOS PAGE
 // ============================================================
 function renderPedidos() {
-  const filtroEtapa = document.getElementById('filtro-etapa')?.value ?? 'ativos';
+  const filtro = document.getElementById('filtro-etapa')?.value ?? 'ativos';
   let lista;
-  if (filtroEtapa === 'ativos') lista = STATE.pedidos.filter(p => p.status !== 'despachado');
-  else if (filtroEtapa === '') lista = STATE.pedidos;
-  else lista = STATE.pedidos.filter(p => p.status === filtroEtapa);
-  lista = [...lista].sort((a,b) => new Date(b.createdAt) - new Date(a.createdAt));
+  if (filtro === 'ativos') lista = STATE.pedidos.filter(p => p.status !== 'despachado');
+  else if (filtro === '') lista = STATE.pedidos;
+  else lista = STATE.pedidos.filter(p => p.status === filtro);
+  lista = [...lista].sort((a,b) => new Date(b.createdAt)-new Date(a.createdAt));
 
   const container = document.getElementById('pedidos-container');
   if (lista.length === 0) {
-    container.innerHTML = '<div class="card" style="padding:40px;text-align:center;color:var(--muted)">Nenhum pedido encontrado</div>';
+    container.innerHTML = '<div class="card" style="padding:32px;text-align:center;color:var(--muted)">Nenhum pedido</div>';
     return;
   }
 
   // Agrupa por dia
   const grupos = {};
   lista.forEach(p => {
-    const chave = dataChave(p.createdAt);
-    if (!grupos[chave]) grupos[chave] = [];
-    grupos[chave].push(p);
+    const ch = dataChave(p.createdAt);
+    if (!grupos[ch]) grupos[ch] = [];
+    grupos[ch].push(p);
   });
 
-  const dias = Object.keys(grupos).sort((a,b) => b.localeCompare(a));
-
-  container.innerHTML = dias.map(dia => {
+  container.innerHTML = Object.keys(grupos).sort((a,b) => b.localeCompare(a)).map(dia => {
     const pedidos = grupos[dia];
     const atrasados = pedidos.filter(p => prazoInfo(p).atrasado && p.status !== 'despachado').length;
-    const dataFormatada = formatarData(dia + 'T12:00:00');
-
     const linhas = pedidos.map(p => {
       const pi = prazoInfo(p);
       const isKit = p.itens.some(i => i.deKit);
-      const skusUnicos = [...new Set(p.itens.map(i => i.sku))];
-
+      const skus = [...new Set(p.itens.map(i => i.sku))];
+      const totalPecas = p.itens.reduce((a,i) => a+i.qtd, 0);
       return `<tr>
+        <td><span class="mono" style="color:var(--accent);cursor:pointer;font-weight:600" onclick="abrirDetalhe('${p.id}')">#${p.numero}</span></td>
+        <td><div style="font-weight:500">${p.cliente}</div><div class="text-sm text-muted">${p.email}</div></td>
         <td>
-          <span class="mono" style="color:var(--accent);cursor:pointer;font-weight:600" onclick="abrirDetalhe('${p.id}')">#${p.numero}</span>
+          <div style="margin-bottom:4px">${skus.map(s => `<span class="sku-tag">${s}</span>`).join('')}</div>
+          <div class="text-sm text-muted">${totalPecas} peça${totalPecas>1?'s':''}</div>
         </td>
-        <td>
-          <div style="font-weight:500">${p.cliente}</div>
-          <div class="text-sm text-muted">${p.email}</div>
-        </td>
-        <td>
-          <div class="sku-list">
-            ${skusUnicos.map(s => `<span class="sku-tag">${s}</span>`).join('')}
-          </div>
-        </td>
-        <td>
-          <div style="display:flex;gap:4px;flex-wrap:wrap">
-            ${isKit ? '<span class="badge b-kit">📦 Kit</span>' : ''}
-            ${p.bordado.temBordado ? '<span class="badge b-bord-tag">✦ Bordado</span>' : ''}
-          </div>
-        </td>
-        <td><span class="badge ${badgeCls(p.status)}">${etapaLabel(p.status)}</span></td>
+        <td><div style="display:flex;gap:4px;flex-wrap:wrap">${isKit?'<span class="badge b-kit">📦 Kit</span>':''}${p.bordado.temBordado?'<span class="badge b-bord-tag">✦ Bordado</span>':''}</div></td>
+        <td><span class="badge ${p.status==='separacao'?'b-sep':p.status==='bordado'?'b-bord':p.status==='embalagem'?'b-emb':p.status==='despachado'?'b-desp':'b-sep'}">${{separacao:'Separação',bordado:'Bordado',embalagem:'Embalagem',despachado:'Despachado'}[p.status]||p.status}</span></td>
         <td><span class="prazo ${pi.cls}">${pi.txt}</span></td>
         <td>
-          <div style="display:flex;gap:6px">
-            <button class="btn btn-ghost btn-sm" onclick="abrirDetalhe('${p.id}')">Detalhe</button>
-            ${acaoBtnInline(p)}
+          <div style="display:flex;gap:5px">
+            <button class="btn btn-ghost btn-sm" onclick="abrirDetalhe('${p.id}')">Ver</button>
+            ${p.status==='separacao'?`<button class="btn btn-primary btn-sm" onclick="avancar('${p.id}')">✓ Sep.</button>`:''}
+            ${p.status==='embalagem'?`<button class="btn btn-primary btn-sm" onclick="abrirChecklist('${p.id}')">📦 Embalar</button>`:''}
           </div>
         </td>
       </tr>`;
     }).join('');
-
     return `<div class="day-group">
       <div class="day-header">
-        <span class="day-title">${dataFormatada}</span>
-        <span class="day-count">${pedidos.length} pedido${pedidos.length > 1 ? 's' : ''}</span>
-        ${atrasados > 0 ? `<span class="day-late">⚠ ${atrasados} atrasado${atrasados > 1 ? 's' : ''}</span>` : ''}
+        <span class="day-title">${formatarData(dia)}</span>
+        <span class="day-count">${pedidos.length} pedido${pedidos.length>1?'s':''}</span>
+        ${atrasados>0?`<span class="day-late">⚠ ${atrasados} atrasado${atrasados>1?'s':''}</span>`:''}
       </div>
-      <div class="card">
-        <table class="table">
-          <thead><tr><th>Pedido</th><th>Cliente</th><th>SKUs</th><th>Tags</th><th>Etapa</th><th>Prazo</th><th>Ações</th></tr></thead>
-          <tbody>${linhas}</tbody>
-        </table>
-      </div>
+      <div class="card"><table class="table"><thead><tr><th>Pedido</th><th>Cliente</th><th>SKUs</th><th>Tags</th><th>Etapa</th><th>Prazo</th><th>Ações</th></tr></thead><tbody>${linhas}</tbody></table></div>
     </div>`;
   }).join('');
 }
 
-function acaoBtnInline(p) {
-  if (p.status === 'separacao') return `<button class="btn btn-primary btn-sm" onclick="avancar('${p.id}')">✓ Separado</button>`;
-  if (p.status === 'bordado') return `<button class="btn btn-purple btn-sm" onclick="abrirDetalhe('${p.id}')">Ver bordado</button>`;
-  if (p.status === 'embalagem') return `<button class="btn btn-primary btn-sm" onclick="abrirChecklist('${p.id}')">📦 Embalar</button>`;
-  if (p.status === 'despachado') return `<span style="color:var(--accent);font-size:12px">✓ Despachado</span>`;
-  return '';
-}
-
 // ============================================================
-// FILAS DE PRODUÇÃO
+// FILAS
 // ============================================================
 function renderFila(etapa) {
-  const ids = { separacao: 'sep-tbody', bordado: 'bord-tbody', embalagem: 'emb-tbody' };
+  const ids = {separacao:'sep-tbody',bordado:'bord-tbody',embalagem:'emb-tbody'};
   const tbody = document.getElementById(ids[etapa]);
   if (!tbody) return;
-  const pedidos = STATE.pedidos.filter(p => p.status === etapa);
+  const pedidos = STATE.pedidos.filter(p => p.status === etapa).sort((a,b) => prazoInfo(a).atrasado?-1:1);
 
-  if (pedidos.length === 0) {
-    tbody.innerHTML = `<tr><td colspan="7" style="text-align:center;color:var(--muted);padding:36px">Fila vazia ✓</td></tr>`;
-    return;
-  }
+  if (pedidos.length === 0) { tbody.innerHTML = `<tr><td colspan="7" style="text-align:center;color:var(--muted);padding:32px">Fila vazia ✓</td></tr>`; return; }
 
-  tbody.innerHTML = pedidos.sort((a,b) => prazoInfo(a).cls === 'late' ? -1 : 1).map(p => {
+  tbody.innerHTML = pedidos.map(p => {
     const pi = prazoInfo(p);
-    const isKit = p.itens.some(i => i.deKit);
-    const skusUnicos = [...new Set(p.itens.map(i => i.sku))];
-    const skuHtml = `<div class="sku-list">${skusUnicos.map(s => `<span class="sku-tag">${s}</span>`).join('')}</div>`;
+    const skuHtml = [...new Set(p.itens.map(i=>i.sku))].map(s=>`<span class="sku-tag">${s}</span>`).join('');
+    const totalPecas = p.itens.reduce((a,i)=>a+i.qtd,0);
 
-    if (etapa === 'separacao') return `<tr ${pi.atrasado ? 'style="background:rgba(239,68,68,.04)"' : ''}>
+    if (etapa === 'separacao') return `<tr ${pi.atrasado?'style="background:rgba(239,68,68,.04)"':''}>
       <td><span class="mono" style="color:var(--accent);cursor:pointer" onclick="abrirDetalhe('${p.id}')">#${p.numero}</span></td>
       <td><div>${p.cliente}</div><div class="text-sm text-muted">${p.email}</div></td>
-      <td>${skuHtml}</td>
-      <td><div style="display:flex;gap:4px">${isKit?'<span class="badge b-kit">Kit</span>':''}${p.bordado.temBordado?'<span class="badge b-bord-tag">✦ Bordado</span>':''}</div></td>
+      <td><div>${skuHtml}</div><div class="text-sm text-muted mt12">${totalPecas} peça${totalPecas>1?'s':''}</div></td>
+      <td><div style="display:flex;gap:4px">${p.itens.some(i=>i.deKit)?'<span class="badge b-kit">Kit</span>':''}${p.bordado.temBordado?'<span class="badge b-bord-tag">✦</span>':''}</div></td>
       <td><span class="prazo ${pi.cls}">${pi.txt}</span></td>
       <td><button class="btn btn-primary btn-sm" onclick="avancar('${p.id}')">✓ Separado</button></td>
     </tr>`;
 
     if (etapa === 'bordado') {
       const b = p.bordado;
-      const resumo = [b.nome, b.profissao, b.tipografia, b.cor].filter(Boolean).join(' · ');
-      return `<tr ${pi.atrasado ? 'style="background:rgba(239,68,68,.04)"' : ''}>
+      return `<tr ${pi.atrasado?'style="background:rgba(239,68,68,.04)"':''}>
         <td><span class="mono" style="color:var(--accent);cursor:pointer" onclick="abrirDetalhe('${p.id}')">#${p.numero}</span></td>
-        <td><div>${p.cliente}</div><div class="text-sm text-muted">${p.email}</div></td>
-        <td>${skuHtml}</td>
+        <td><div>${p.cliente}</div></td>
+        <td><div>${skuHtml}</div></td>
         <td>
-          <div style="font-size:12px;color:var(--purple)">${resumo || 'Ver detalhe'}</div>
-          ${b.brasao ? `<div style="font-size:11px;color:var(--orange);margin-top:2px">🔰 Brasão: ${b.posicaoBrasao || 'ver detalhe'}</div>` : ''}
+          <div style="font-size:12px;color:var(--purple)">${[b.nome,b.profissao,b.tipografia,b.cor].filter(Boolean).join(' · ')}</div>
+          ${b.brasao?`<div style="font-size:11px;color:var(--orange)">🔰 Brasão: ${b.posicao||'ver detalhe'}</div>`:''}
         </td>
         <td><span class="prazo ${pi.cls}">${pi.txt}</span></td>
-        <td>
-          <div style="display:flex;gap:6px">
-            <button class="btn btn-ghost btn-sm" onclick="abrirDetalhe('${p.id}')">Ver tudo</button>
-            <button class="btn btn-primary btn-sm" onclick="avancar('${p.id}')">✓ Bordado ok</button>
-          </div>
-        </td>
+        <td><div style="display:flex;gap:5px">
+          <button class="btn btn-ghost btn-sm" onclick="abrirDetalhe('${p.id}')">Ver tudo</button>
+          <button class="btn btn-primary btn-sm" onclick="avancar('${p.id}')">✓ Bordado ok</button>
+        </div></td>
       </tr>`;
     }
 
-    if (etapa === 'embalagem') return `<tr ${pi.atrasado ? 'style="background:rgba(239,68,68,.04)"' : ''}>
+    if (etapa === 'embalagem') return `<tr ${pi.atrasado?'style="background:rgba(239,68,68,.04)"':''}>
       <td><span class="mono" style="color:var(--accent);cursor:pointer" onclick="abrirDetalhe('${p.id}')">#${p.numero}</span></td>
-      <td><div>${p.cliente}</div><div class="text-sm text-muted">${p.email}</div></td>
-      <td>
-        <div class="sku-list">${skusUnicos.map(s => `<span class="sku-tag">${s}</span>`).join('')}</div>
-        <div style="font-size:11px;color:var(--muted);margin-top:4px">${p.itens.length} pijama${p.itens.length > 1 ? 's' : ''} no pedido</div>
-      </td>
-      <td><div style="display:flex;gap:4px">${isKit?'<span class="badge b-kit">Kit</span>':''}${p.bordado.temBordado?'<span class="badge b-bord-tag">✦ Bord.</span>':''}</div></td>
+      <td><div>${p.cliente}</div></td>
+      <td><div>${skuHtml}</div><div class="text-sm text-muted mt12">${totalPecas} peças</div></td>
+      <td><div style="display:flex;gap:4px">${p.itens.some(i=>i.deKit)?'<span class="badge b-kit">Kit</span>':''}${p.bordado.temBordado?'<span class="badge b-bord-tag">✦</span>':''}</div></td>
       <td><span class="prazo ${pi.cls}">${pi.txt}</span></td>
-      <td>
-        <button class="btn btn-primary btn-sm" onclick="abrirChecklist('${p.id}')">📦 Embalar</button>
-      </td>
+      <td><button class="btn btn-primary btn-sm" onclick="abrirChecklist('${p.id}')">📦 Embalar</button></td>
     </tr>`;
-
     return '';
+  }).join('');
+}
+
+// ============================================================
+// ESTOQUE
+// ============================================================
+function renderEstoque(busca = '') {
+  const b = (busca || document.getElementById('busca-sku')?.value || '').toUpperCase();
+  const f = document.getElementById('filtro-est')?.value || '';
+  const tbody = document.getElementById('est-tbody');
+  const skus = Object.keys(STATE.estoque).sort().filter(s => {
+    if (b && !s.includes(b)) return false;
+    const e = STATE.estoque[s];
+    if (f === 'neg' && e.saldo >= 0) return false;
+    if (f === 'crit' && e.saldo >= 0) return false;
+    if (f === 'pos' && e.saldo <= 0) return false;
+    return true;
+  });
+
+  const neg = Object.values(STATE.estoque).filter(e => e.saldo < 0).length;
+  document.getElementById('nb-est').textContent = neg;
+
+  const ea = document.getElementById('est-alert');
+  ea.innerHTML = neg > 0 ? `<div class="alert alert-danger" style="margin-bottom:14px">⚠ ${neg} SKU${neg>1?'s':''} com saldo negativo — verificar produção</div>` : '';
+
+  if (skus.length === 0) { tbody.innerHTML = '<tr><td colspan="6" style="text-align:center;color:var(--muted);padding:32px">Nenhum SKU</td></tr>'; return; }
+
+  tbody.innerHTML = skus.map(sku => {
+    const e = STATE.estoque[sku];
+    const cls = e.saldo < 0 ? 'est-neg' : e.saldo > 0 ? 'est-pos' : 'est-zero';
+    return `<tr ${e.saldo < 0 ? 'class="est-critical"' : ''}>
+      <td class="mono" style="font-size:12px;color:var(--accent)">${sku}</td>
+      <td class="${cls} mono" style="font-size:16px">${e.saldo > 0 ? '+' : ''}${e.saldo}</td>
+      <td class="mono text-sm text-muted">${e.minSeguranca || '—'}</td>
+      <td class="mono text-sm text-muted">—</td>
+      <td>${e.saldo < 0 ? '<span class="badge b-late">🔴 Negativo</span>' : '<span class="badge b-ok">✓ Ok</span>'}</td>
+      <td><button class="btn btn-ghost btn-sm" onclick="openEntrada('${sku}')">+ Entrada</button></td>
+    </tr>`;
   }).join('');
 }
 
@@ -1167,385 +1338,448 @@ function renderFila(etapa) {
 function avancar(id) {
   const p = STATE.pedidos.find(x => x.id === id);
   if (!p) return;
-
   if (p.status === 'separacao') {
     p.etapas.separacao = true;
-    if (p.bordado.temBordado) {
-      p.status = 'bordado';
-      addLog(`#${p.numero} → bordado`, 'info');
-    } else {
-      p.status = 'embalagem';
-      addLog(`#${p.numero} → embalagem`, 'success');
-    }
+    p.status = p.bordado.temBordado ? 'bordado' : 'embalagem';
+    addLog(`#${p.numero} → ${p.status}`, 'success');
   } else if (p.status === 'bordado') {
     p.etapas.bordado = true;
     p.status = 'embalagem';
-    addLog(`#${p.numero} → bordado concluído → embalagem`, 'success');
+    addLog(`#${p.numero} → embalagem`, 'success');
   } else if (p.status === 'embalagem') {
     p.etapas.embalagem = true;
     p.status = 'despachado';
     addLog(`#${p.numero} ✓ DESPACHADO`, 'success');
   }
-
   atualizarDashboard();
-  // Rerender da página atual
-  const paginaAtiva = document.querySelector('.page.active')?.id?.replace('page-','');
-  if (paginaAtiva === 'pedidos') renderPedidos();
-  else if (['separacao','bordado','embalagem'].includes(paginaAtiva)) renderFila(paginaAtiva);
+  const pa = document.querySelector('.page.active')?.id?.replace('page-','');
+  if (pa === 'pedidos') renderPedidos();
+  else if (['separacao','bordado','embalagem'].includes(pa)) renderFila(pa);
+  salvarEstado();
 }
 
 // ============================================================
-// DETALHE DO PEDIDO
+// CHECKLIST EMBALAGEM
+// ============================================================
+let CHK = { id: null, checks: {} };
+
+function abrirChecklist(id) {
+  const p = STATE.pedidos.find(x => x.id === id);
+  if (!p) return;
+  CHK = { id, checks: {} };
+  document.getElementById('chk-title').textContent = `Checklist #${p.numero} — ${p.cliente}`;
+
+  // Agrupa itens
+  const grupos = [];
+  const kitMap = {};
+  p.itens.forEach((item, idx) => {
+    const cid = `c${idx}`;
+    CHK.checks[cid] = false;
+    if (item.deKit) {
+      if (!kitMap[item.deKit]) { kitMap[item.deKit] = { nome: item.deKit, itens: [] }; grupos.push({ tipo:'kit', ...kitMap[item.deKit] }); }
+      kitMap[item.deKit].itens.push({ ...item, cid });
+    } else {
+      grupos.push({ tipo:'ind', nome: item.nome, itens: [{ ...item, cid }] });
+    }
+  });
+
+  const total = p.itens.length;
+  let html = `<div class="alert alert-warn" style="margin-bottom:14px">⚠ <strong>${total} peça${total>1?'s':''}</strong> neste pedido — marque cada item ao colocar no pacote</div>`;
+
+  grupos.forEach(g => {
+    const b = p.bordado;
+    html += `<div style="margin-bottom:14px">
+      <div style="font-size:12px;font-weight:600;color:var(--muted);padding:8px 14px;background:var(--bg3);border-radius:6px 6px 0 0;border:1px solid var(--border2);border-bottom:none">
+        ${g.tipo==='kit'?'📦 Kit':'👕 Individual'} — ${g.itens[0]?.tamanho||''}
+      </div>
+      ${g.tipo==='kit' && b.temBordado ? `<div class="bord-card" style="border-radius:0;border-top:none;border-bottom:none">
+        <div class="bord-title">✦ Bordado — aplicar em todos os pijamas do kit</div>
+        <div class="bord-grid">
+          ${b.nome?`<div class="bord-field"><div class="bord-field-label">Nome</div><div class="bord-field-value">${b.nome}</div></div>`:''}
+          ${b.profissao?`<div class="bord-field"><div class="bord-field-label">Profissão</div><div class="bord-field-value">${b.profissao}</div></div>`:''}
+          ${b.tipografia?`<div class="bord-field"><div class="bord-field-label">Fonte</div><div class="bord-field-value">${b.tipografia}</div></div>`:''}
+          ${b.cor?`<div class="bord-field"><div class="bord-field-label">Cor</div><div class="bord-field-value">${b.cor}</div></div>`:''}
+          ${b.brasao?`<div class="bord-field" style="background:rgba(251,146,60,.1)"><div class="bord-field-label">Brasão</div><div class="bord-field-value" style="color:var(--orange)">📍 ${b.posicao||'ver detalhe'}</div></div>`:''}
+        </div>
+      </div>` : ''}
+      <div style="border:1px solid var(--border2);border-radius:0 0 6px 6px;overflow:hidden">
+        ${g.itens.map(item => `
+          <div class="chk-item" id="row-${item.cid}" onclick="toggleChk('${item.cid}')">
+            <div class="chk-box" id="cb-${item.cid}"></div>
+            <div style="flex:1">
+              <div class="chk-sku">${item.sku}</div>
+              <div class="chk-desc">${item.cor||'—'} · Tam ${item.tamanho||'—'}</div>
+            </div>
+            <div style="font-size:11px;color:var(--muted)">Pijama ${item.numero||''}</div>
+          </div>
+        `).join('')}
+      </div>
+    </div>`;
+  });
+
+  html += `<div class="chk-progress">
+    <span id="chk-prog-txt" style="color:var(--muted)">0 / ${total}</span>
+    <div class="chk-bar"><div class="chk-fill" id="chk-fill" style="width:0%"></div></div>
+    <span id="chk-pct" style="color:var(--muted)">0%</span>
+  </div>`;
+
+  document.getElementById('chk-body').innerHTML = html;
+  document.getElementById('chk-btn').disabled = true;
+  openModal('modal-chk');
+}
+
+function toggleChk(cid) {
+  CHK.checks[cid] = !CHK.checks[cid];
+  const checked = CHK.checks[cid];
+  document.getElementById('cb-'+cid).className = 'chk-box' + (checked?' checked':'');
+  document.getElementById('cb-'+cid).textContent = checked ? '✓' : '';
+  document.getElementById('row-'+cid).className = 'chk-item' + (checked?' checked':'');
+  const total = Object.keys(CHK.checks).length;
+  const done = Object.values(CHK.checks).filter(Boolean).length;
+  const pct = Math.round(done/total*100);
+  document.getElementById('chk-prog-txt').textContent = `${done} / ${total}`;
+  document.getElementById('chk-fill').style.width = pct + '%';
+  document.getElementById('chk-pct').textContent = pct + '%';
+  document.getElementById('chk-pct').style.color = pct===100 ? 'var(--accent)' : 'var(--muted)';
+  document.getElementById('chk-btn').disabled = done < total;
+}
+
+function confirmarDespacho() {
+  closeModal('modal-chk');
+  avancar(CHK.id);
+}
+
+// ============================================================
+// DETALHE PEDIDO
 // ============================================================
 function abrirDetalhe(id) {
-  const p = STATE.pedidos.find(x => x.id === id);
+  const p = STATE.pedidos.find(x => x.id === id) || STATE.historico.find(x => x.id === id);
   if (!p) return;
   const pi = prazoInfo(p);
   const b = p.bordado;
-  const isKit = p.itens.some(i => i.deKit);
 
   document.getElementById('mp-title').textContent = `Pedido #${p.numero} — ${p.cliente}`;
 
-  let bordadoHtml = '';
-  if (b.temBordado) {
-    bordadoHtml = `<div class="bord-card">
-      <div class="bord-card-title">✦ Personalização — Bordado</div>
-      <div class="bord-grid">
-        ${b.nome ? `<div class="bord-field"><div class="bord-field-label">Nome</div><div class="bord-field-value highlight">${b.nome}</div></div>` : ''}
-        ${b.profissao ? `<div class="bord-field"><div class="bord-field-label">Profissão</div><div class="bord-field-value highlight">${b.profissao}</div></div>` : ''}
-        ${b.tipografia ? `<div class="bord-field"><div class="bord-field-label">Tipografia</div><div class="bord-field-value">${b.tipografia}</div></div>` : ''}
-        ${b.cor ? `<div class="bord-field"><div class="bord-field-label">Cor da letra</div><div class="bord-field-value" style="display:flex;align-items:center;gap:6px"><span style="width:12px;height:12px;border-radius:50%;background:${corCSS(b.cor)};display:inline-block;border:1px solid var(--border2)"></span>${b.cor}</div></div>` : ''}
-      </div>
-      ${b.brasao ? `<div class="bord-brasao">
-        <div class="bord-brasao-title">🔰 Brasão / Logo</div>
-        <div style="font-weight:600;color:var(--orange)">${b.brasao}</div>
-        ${b.posicaoBrasao ? `<div style="font-size:12px;color:var(--muted);margin-top:4px">📍 Posição: <strong style="color:var(--text)">${b.posicaoBrasao}</strong></div>` : ''}
-      </div>` : ''}
-    </div>`;
-  }
+  let bordHtml = '';
+  if (b.temBordado) bordHtml = `<div class="bord-card"><div class="bord-title">✦ Personalização — Bordado</div><div class="bord-grid">
+    ${b.nome?`<div class="bord-field"><div class="bord-field-label">Nome</div><div class="bord-field-value">${b.nome}</div></div>`:''}
+    ${b.profissao?`<div class="bord-field"><div class="bord-field-label">Profissão</div><div class="bord-field-value">${b.profissao}</div></div>`:''}
+    ${b.tipografia?`<div class="bord-field"><div class="bord-field-label">Fonte</div><div class="bord-field-value">${b.tipografia}</div></div>`:''}
+    ${b.cor?`<div class="bord-field"><div class="bord-field-label">Cor</div><div class="bord-field-value">${b.cor}</div></div>`:''}
+    ${b.brasao?`<div class="bord-field" style="background:rgba(251,146,60,.1)"><div class="bord-field-label">Brasão</div><div class="bord-field-value" style="color:var(--orange)">📍 ${b.posicao||'—'}</div></div>`:''}
+  </div></div>`;
 
   document.getElementById('mp-body').innerHTML = `
-    <div style="display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-bottom:18px">
+    <div class="grid2" style="margin-bottom:16px">
       <div><div class="form-label">Cliente</div><div style="font-weight:500">${p.cliente}</div><div class="text-sm text-muted">${p.email}</div></div>
-      <div><div class="form-label">Status</div><span class="badge ${badgeCls(p.status)}">${etapaLabel(p.status)}</span></div>
-      <div><div class="form-label">Data do pagamento</div><div class="mono text-sm">${new Date(p.createdAt).toLocaleDateString('pt-BR')}</div></div>
+      <div><div class="form-label">Status no site</div><span style="font-size:12px;color:var(--muted)">${p.statusSiteLabel||'—'}</span></div></div>
+      <div><div class="form-label">Etapa interna</div><span class="badge ${p.status==='separacao'?'b-sep':p.status==='bordado'?'b-bord':p.status==='embalagem'?'b-emb':'b-desp'}">${{separacao:'Separação',bordado:'Bordado',embalagem:'Embalagem',despachado:'Despachado'}[p.status]||p.status}</span></div>
+      <div><div class="form-label">Pagamento</div><div class="mono text-sm">${new Date(p.createdAt).toLocaleDateString('pt-BR')}</div></div>
       <div><div class="form-label">Prazo</div><span class="prazo ${pi.cls}">${pi.txt}</span></div>
-      ${p.entrega?.cidade ? `<div><div class="form-label">Entrega</div><div class="text-sm">${p.entrega.cidade}/${p.entrega.estado} — CEP ${p.entrega.cep}</div></div>` : ''}
+      ${p.entrega?.cidade?`<div><div class="form-label">Entrega</div><div class="text-sm">${p.entrega.cidade}/${p.entrega.estado} — CEP ${p.entrega.cep}</div></div>`:''}
     </div>
+    ${bordHtml}
+    <div class="form-label" style="margin-bottom:8px">SKUs do pedido (${p.itens.length} peças)</div>
+    <table class="table">
+      <thead><tr><th>#</th><th>SKU</th><th>Cor</th><th>Tam</th><th>Qtde</th><th>Origem</th></tr></thead>
+      <tbody>${p.itens.map((item,i) => `<tr>
+        <td class="mono text-sm text-muted">${i+1}</td>
+        <td class="mono" style="font-size:11px;color:var(--accent)">${item.sku}</td>
+        <td class="text-sm">${item.cor||'—'}</td>
+        <td class="mono text-sm">${item.tamanho||'—'}</td>
+        <td class="mono text-sm">${item.qtd}</td>
+        <td>${item.deKit?`<span class="badge b-kit">Kit ${item.numero}</span>`:'<span class="text-muted text-sm">Individual</span>'}</td>
+      </tr>`).join('')}</tbody>
+    </table>`;
 
-    ${bordadoHtml}
-
-    <div class="form-label" style="margin-bottom:8px">SKUs do pedido (${p.itens.length})</div>
-    <table class="table" style="margin-bottom:16px">
-      <thead><tr><th>#</th><th>SKU gerado</th><th>Cor</th><th>Tam</th><th>Origem</th></tr></thead>
-      <tbody>
-        ${p.itens.map((item, i) => `<tr>
-          <td class="mono text-muted text-sm">${i+1}</td>
-          <td class="mono text-sm" style="color:var(--accent)">${item.sku}</td>
-          <td class="text-sm">${item.cor || '—'}</td>
-          <td class="mono text-sm">${item.tamanho || '—'}</td>
-          <td>${item.deKit ? `<span class="badge b-kit">Kit ${item.numero}</span>` : '<span class="text-muted text-sm">Individual</span>'}</td>
-        </tr>`).join('')}
-      </tbody>
-    </table>
-
-    <div class="form-label" style="margin-bottom:8px">Progresso</div>
-    <div style="display:flex;gap:6px;flex-wrap:wrap">
-      ${[
-        { key: 'separacao', label: 'Separação' },
-        ...(b.temBordado ? [{ key: 'bordado', label: 'Bordado' }] : []),
-        { key: 'embalagem', label: 'Embalagem' }
-      ].map(e => {
-        const done = p.etapas[e.key] === true;
-        const active = p.status === e.key;
-        return `<span class="badge ${done ? 'b-done' : active ? 'b-sep' : ''}" style="${!done && !active ? 'opacity:.4' : ''}">${done ? '✓' : active ? '●' : '○'} ${e.label}</span>`;
-      }).join('')}
-      ${p.status === 'despachado' ? '<span class="badge b-done">✓ Despachado</span>' : ''}
-    </div>
-  `;
-
-  // Botão de ação no footer
-  const btnAcao = document.getElementById('mp-btn');
-  if (p.status === 'separacao') {
-    btnAcao.style.display = '';
-    btnAcao.textContent = '✓ Marcar como separado';
-    btnAcao.className = 'btn btn-primary';
-    btnAcao.onclick = () => { avancar(id); closeModal('modal-pedido'); };
-  } else if (p.status === 'bordado') {
-    btnAcao.style.display = '';
-    btnAcao.textContent = '✓ Bordado concluído';
-    btnAcao.className = 'btn btn-purple';
-    btnAcao.onclick = () => { avancar(id); closeModal('modal-pedido'); };
-  } else if (p.status === 'embalagem') {
-    btnAcao.style.display = '';
-    btnAcao.textContent = '✓ Despachar pedido';
-    btnAcao.className = 'btn btn-primary';
-    btnAcao.onclick = () => { avancar(id); closeModal('modal-pedido'); };
-  } else {
-    btnAcao.style.display = 'none';
-  }
+  const btn = document.getElementById('mp-btn');
+  if (p.status === 'separacao') { btn.style.display=''; btn.textContent='✓ Marcar separado'; btn.onclick=()=>{avancar(id);closeModal('modal-pedido');}; }
+  else if (p.status === 'bordado') { btn.style.display=''; btn.textContent='✓ Bordado ok'; btn.onclick=()=>{avancar(id);closeModal('modal-pedido');}; }
+  else if (p.status === 'embalagem') { btn.style.display=''; btn.textContent='📦 Embalar'; btn.onclick=()=>{closeModal('modal-pedido');abrirChecklist(id);}; }
+  else btn.style.display='none';
 
   openModal('modal-pedido');
-}
-
-function corCSS(cor) {
-  const m = {
-    'Preto':'#111','Azul Marinho':'#1a3a5c','Azul Royal':'#1e40af','Verde Garden':'#166534',
-    'Cinza':'#6b7280','Branco':'#f9fafb','Dourado':'#b45309','Rosa':'#ec4899',
-    'Prata':'#9ca3af','Vinho':'#7f1d1d'
-  };
-  return m[cor] || '#888';
 }
 
 // ============================================================
 // HELPERS
 // ============================================================
-function etapaLabel(s) {
-  return { separacao:'Separação', bordado:'Bordado', embalagem:'Embalagem', despachado:'Despachado' }[s] || s;
-}
-function badgeCls(s) {
-  return { separacao:'badge b-sep', bordado:'badge b-bord', embalagem:'badge b-emb', despachado:'badge b-done' }[s] || 'badge';
-}
-
 function addLog(msg, type='info') {
-  const icons = { success:'✓', warn:'⚠', error:'✕', info:'·' };
-  const colors = { success:'var(--accent)', warn:'var(--warn)', error:'var(--danger)', info:'var(--muted)' };
-  STATE.log.unshift({ msg, type, time: new Date() });
+  const icons = {success:'✓',warn:'⚠',error:'✕',info:'·'};
+  const colors = {success:'var(--accent)',warn:'var(--warn)',error:'var(--danger)',info:'var(--muted)'};
+  STATE.log.unshift({msg,type,time:new Date()});
   const el = document.getElementById('log-list');
   if (STATE.log.length === 1) el.innerHTML = '';
   const e = document.createElement('div');
   e.className = 'log-entry';
-  e.innerHTML = `<div class="log-time">${new Date().toLocaleTimeString('pt-BR',{hour:'2-digit',minute:'2-digit'})}</div>
-    <div class="log-msg"><span style="color:${colors[type]}">${icons[type]}</span> ${msg}</div>`;
+  e.innerHTML = `<div class="log-time">${new Date().toLocaleTimeString('pt-BR',{hour:'2-digit',minute:'2-digit'})}</div><div class="log-msg"><span style="color:${colors[type]}">${icons[type]}</span> ${msg}</div>`;
   el.prepend(e);
 }
 
 function showAlert(type, msg) {
   const area = document.getElementById('alert-area');
-  const cls = { info:'alert-info', warn:'alert-warn', danger:'alert-danger', success:'alert-success' }[type] || 'alert-info';
+  const cls = {info:'alert-info',warn:'alert-warn',danger:'alert-danger',success:'alert-success'}[type]||'alert-info';
   area.innerHTML = `<div class="alert ${cls}">${msg}</div>`;
   setTimeout(() => area.innerHTML = '', 6000);
 }
 
 function openModal(id) { document.getElementById(id).classList.add('open'); }
 function closeModal(id) { document.getElementById(id).classList.remove('open'); }
-document.querySelectorAll('.modal-overlay').forEach(o => o.addEventListener('click', e => { if (e.target === o) o.classList.remove('open'); }));
+document.querySelectorAll('.modal-overlay').forEach(o => o.addEventListener('click', e => { if (e.target===o) o.classList.remove('open'); }));
 
-// ============================================================
+function goTo(page) {
+  document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+  document.querySelectorAll('.nav-btn').forEach(n => n.classList.remove('active'));
+  document.getElementById('page-'+page).classList.add('active');
+  const nav = [...document.querySelectorAll('.nav-btn')].find(n => n.onclick?.toString().includes(`'${page}'`));
+  if (nav) nav.classList.add('active');
+  const renders = {pedidos:renderPedidos,separacao:()=>renderFila('separacao'),bordado:()=>renderFila('bordado'),embalagem:()=>renderFila('embalagem'),estoque:renderEstoque,necessidade:calcularNecessidade,pcp:calcularPCP,relatorio:renderRelatorio};
+  if (renders[page]) renders[page]();
+  if (page==='pecas-dia') {
+    const ontem = new Date(); ontem.setDate(ontem.getDate()-1);
+    document.getElementById('data-pecas').value = dataChave(ontem);
+    renderPecasDia();
+  }
+}
+
 // CONFIG
-// ============================================================
 function loadConfig() {
   document.getElementById('cfg-backend').value = STATE.config.backend;
   document.getElementById('cfg-prazo').value = STATE.config.prazo;
-  document.getElementById('cfg-prazo-bord').value = STATE.config.prazoBordado;
+  document.getElementById('cfg-lead').value = STATE.config.leadTime;
+  document.getElementById('cfg-seg').value = STATE.config.diasSeguranca;
 }
 function salvarConfig() {
   STATE.config.backend = document.getElementById('cfg-backend').value.trim().replace(/\/$/,'');
   STATE.config.prazo = parseInt(document.getElementById('cfg-prazo').value);
-  STATE.config.prazoBordado = parseInt(document.getElementById('cfg-prazo-bord').value);
-  addLog('Configurações salvas', 'success');
-  showAlert('success', '✓ Configurações salvas!');
+  STATE.config.leadTime = parseInt(document.getElementById('cfg-lead').value);
+  STATE.config.diasSeguranca = parseInt(document.getElementById('cfg-seg').value);
+  salvarEstado();
+  showAlert('success','✓ Configurações salvas!');
 }
 async function testarConexao() {
   const el = document.getElementById('teste-res');
-  el.textContent = 'Testando...'; el.style.color = 'var(--muted)';
+  el.textContent='Testando...';
   try {
     const r = await fetch(`${STATE.config.backend}/api/testar`);
     const d = await r.json();
-    if (d.sucesso) { el.textContent = `✓ OK — ${d.total_pedidos} pedidos`; el.style.color = 'var(--accent)'; }
-    else { el.textContent = '⚠ Servidor ok, Shoppub falhou'; el.style.color = 'var(--warn)'; }
-  } catch(e) { el.textContent = '✕ Servidor não encontrado'; el.style.color = 'var(--danger)'; }
+    el.textContent = d.sucesso ? `✓ OK — ${d.total_pedidos} pedidos` : '⚠ Shoppub falhou';
+    el.style.color = d.sucesso ? 'var(--accent)' : 'var(--warn)';
+  } catch(e) { el.textContent='✕ Sem conexão'; el.style.color='var(--danger)'; }
 }
 
-// ============================================================
-// CHECKLIST DE EMBALAGEM
-// ============================================================
-let CHECKLIST_STATE = { pedidoId: null, checks: {} };
-
-function abrirChecklist(id) {
-  const p = STATE.pedidos.find(x => x.id === id);
-  if (!p) return;
-
-  CHECKLIST_STATE = { pedidoId: id, checks: {} };
-
-  document.getElementById('chk-title').textContent = `Checklist — Pedido #${p.numero} · ${p.cliente}`;
-
-  // Agrupa itens por kit ou individual
-  const grupos = [];
-  const kitMap = {};
-
-  p.itens.forEach((item, idx) => {
-    if (item.deKit) {
-      if (!kitMap[item.deKit]) {
-        kitMap[item.deKit] = { tipo: 'kit', nome: item.deKit, itens: [], bordado: p.bordado };
-        grupos.push(kitMap[item.deKit]);
-      }
-      kitMap[item.deKit].itens.push({ ...item, checkId: `chk-${idx}` });
-    } else {
-      grupos.push({ tipo: 'individual', nome: item.nome, itens: [{ ...item, checkId: `chk-${idx}` }], bordado: item.bordadoIndividual || p.bordado });
-    }
-  });
-
-  const totalItens = p.itens.length;
-
-  let html = `<div style="background:rgba(245,158,11,.08);border:1px solid rgba(245,158,11,.2);border-radius:8px;padding:12px 16px;margin-bottom:16px">
-    <div style="font-weight:600;color:var(--warn);font-size:13px;margin-bottom:4px">⚠ Atenção — ${totalItens} pijama${totalItens > 1 ? 's' : ''} neste pedido</div>
-    <div style="font-size:12px;color:var(--muted)">Marque cada item ao colocá-lo no pacote. O botão de despacho só ativa quando tudo estiver confirmado.</div>
-  </div>`;
-
-  grupos.forEach(grupo => {
-    const isKit = grupo.tipo === 'kit';
-    const b = grupo.bordado;
-    const temBord = b?.temBordado;
-
-    // Header do grupo
-    html += `<div class="chk-grupo">
-      <div class="chk-grupo-header">
-        <span>${isKit ? '📦' : '👕'}</span>
-        <span class="chk-grupo-title">${isKit ? 'Kit' : 'Individual'} — ${grupo.itens[0]?.genero === 'MAS' ? 'Masculino' : 'Feminino'} ${grupo.itens[0]?.tecido || ''}</span>
-        <span class="chk-grupo-count">${grupo.itens.length} pijama${grupo.itens.length > 1 ? 's' : ''} · Tam: ${grupo.itens[0]?.tamanho || '—'}</span>
-      </div>`;
-
-    // Bordado do grupo (kit = uma vez, individual = por item)
-    if (isKit && temBord) {
-      html += `<div class="chk-bordado-info">
-        <div class="chk-bordado-title">✦ Bordado — mesmo em todos os pijamas do kit</div>
-        <div class="chk-bordado-fields">
-          ${b.nome ? `<div class="chk-bordado-field"><div class="chk-bordado-label">Nome</div><div class="chk-bordado-value">${b.nome}</div></div>` : ''}
-          ${b.profissao ? `<div class="chk-bordado-field"><div class="chk-bordado-label">Profissão</div><div class="chk-bordado-value">${b.profissao}</div></div>` : ''}
-          ${b.tipografia ? `<div class="chk-bordado-field"><div class="chk-bordado-label">Fonte</div><div class="chk-bordado-value">${b.tipografia}</div></div>` : ''}
-          ${b.cor ? `<div class="chk-bordado-field"><div class="chk-bordado-label">Cor</div><div class="chk-bordado-value" style="display:flex;align-items:center;gap:5px"><span style="width:10px;height:10px;border-radius:50%;background:${corCSS(b.cor)};display:inline-block;border:1px solid var(--border2)"></span>${b.cor}</div></div>` : ''}
-          ${b.brasao ? `<div class="chk-bordado-field" style="background:rgba(251,146,60,.1)"><div class="chk-bordado-label">Brasão</div><div class="chk-bordado-value" style="color:var(--orange)">${b.brasao} ${b.posicaoBrasao ? '· ' + b.posicaoBrasao : ''}</div></div>` : ''}
-        </div>
-      </div>`;
-    }
-
-    // Itens para marcar
-    grupo.itens.forEach(item => {
-      CHECKLIST_STATE.checks[item.checkId] = false;
-      const bordInfo = !isKit && temBord ? `<div class="chk-item-bord">✦ ${[b.nome, b.profissao, b.tipografia, b.cor].filter(Boolean).join(' · ')}</div>` : '';
-      html += `<div class="chk-item" id="row-${item.checkId}" onclick="toggleCheck('${item.checkId}')">
-        <div class="chk-checkbox" id="cb-${item.checkId}"></div>
-        <div class="chk-item-info">
-          <div class="chk-item-sku">${item.sku}</div>
-          <div class="chk-item-desc">${item.cor || '—'} · Tamanho ${item.tamanho || '—'}</div>
-          ${bordInfo}
-        </div>
-        <div style="font-size:11px;color:var(--muted)">Pijama ${item.numero || ''}</div>
-      </div>`;
-    });
-
-    html += `</div>`; // fecha chk-grupo
-  });
-
-  // Barra de progresso
-  html += `<div class="chk-progress">
-    <span style="color:var(--muted)">0 / ${totalItens} confirmados</span>
-    <div class="chk-progress-bar"><div class="chk-progress-fill" id="chk-fill" style="width:0%"></div></div>
-    <span id="chk-pct" style="color:var(--muted)">0%</span>
-  </div>`;
-
-  document.getElementById('chk-body').innerHTML = html;
-  document.getElementById('chk-btn-despachar').disabled = true;
-  openModal('modal-checklist');
-}
-
-function toggleCheck(checkId) {
-  CHECKLIST_STATE.checks[checkId] = !CHECKLIST_STATE.checks[checkId];
-  const checked = CHECKLIST_STATE.checks[checkId];
-
-  const cb = document.getElementById('cb-' + checkId);
-  const row = document.getElementById('row-' + checkId);
-  cb.textContent = checked ? '✓' : '';
-  cb.className = 'chk-checkbox' + (checked ? ' checked' : '');
-  row.className = 'chk-item' + (checked ? ' checked' : '');
-
-  // Atualiza progresso
-  const total = Object.keys(CHECKLIST_STATE.checks).length;
-  const done = Object.values(CHECKLIST_STATE.checks).filter(Boolean).length;
-  const pct = Math.round((done / total) * 100);
-
-  document.querySelector('.chk-progress span').textContent = `${done} / ${total} confirmados`;
-  document.getElementById('chk-fill').style.width = pct + '%';
-  document.getElementById('chk-pct').textContent = pct + '%';
-  document.getElementById('chk-pct').style.color = pct === 100 ? 'var(--accent)' : 'var(--muted)';
-
-  // Habilita botão só quando 100%
-  const btn = document.getElementById('chk-btn-despachar');
-  btn.disabled = done < total;
-  if (done === total) {
-    btn.style.background = 'var(--accent)';
-    btn.style.transform = 'scale(1.02)';
-  } else {
-    btn.style.background = '';
-    btn.style.transform = '';
-  }
-}
-
-function confirmarDespacho() {
-  const id = CHECKLIST_STATE.pedidoId;
-  if (!id) return;
-  closeModal('modal-checklist');
-  avancar(id);
-  addLog(`#${STATE.pedidos.find(x=>x.id===id)?.numero} ✓ Checklist completo → DESPACHADO`, 'success');
-}
-
-// ============================================================
-// PERSISTÊNCIA LOCAL
-// ============================================================
+// PERSISTÊNCIA
 function salvarEstado() {
   try {
-    const dados = {
-      pedidos: STATE.pedidos,
-      estoque: STATE.estoque,
-      config: STATE.config,
-      versao: '2.0'
-    };
-    localStorage.setItem('grafitte_sistema', JSON.stringify(dados));
-  } catch(e) { console.warn('Erro ao salvar estado:', e); }
+    localStorage.setItem('grafitte_v2', JSON.stringify({
+      pedidos: STATE.pedidos, estoque: STATE.estoque, config: STATE.config, v: '2.1'
+    }));
+  } catch(e) {}
 }
-
 function carregarEstado() {
   try {
-    const raw = localStorage.getItem('grafitte_sistema');
+    const raw = localStorage.getItem('grafitte_v2');
     if (!raw) return false;
-    const dados = JSON.parse(raw);
-    if (dados.versao !== '2.0') return false;
-    // Restaura pedidos com datas corretas
-    STATE.pedidos = (dados.pedidos || []).map(p => ({
-      ...p,
-      createdAt: new Date(p.createdAt),
-      prazo: new Date(p.prazo)
-    }));
-    STATE.estoque = dados.estoque || {};
-    if (dados.config) Object.assign(STATE.config, dados.config);
-    addLog(`Estado restaurado: ${STATE.pedidos.length} pedidos`, 'success');
+    const d = JSON.parse(raw);
+    if (d.v !== '2.1') return false;
+    STATE.pedidos = (d.pedidos||[]).map(p => ({...p, createdAt: new Date(p.createdAt)}));
+    STATE.estoque = d.estoque || {};
+    if (d.config) Object.assign(STATE.config, d.config);
     return true;
-  } catch(e) {
-    console.warn('Erro ao carregar estado:', e);
-    return false;
-  }
+  } catch(e) { return false; }
 }
 
-// Salva automaticamente após cada ação importante
-const _avancarOrig = avancar;
-avancar = function(id) {
-  _avancarOrig(id);
-  salvarEstado();
-};
+// ============================================================
+// NECESSIDADE DE PRODUÇÃO
+// ============================================================
+function calcularNecessidade() {
+  const container = document.getElementById('nec-container');
+  const pedidosAbertos = STATE.pedidos.filter(p => p.status !== 'despachado');
 
-const _processarOrig = processarPedidos;
-processarPedidos = function(raw) {
-  const n = _processarOrig(raw);
+  if (pedidosAbertos.length === 0) {
+    container.innerHTML = '<div class="card" style="padding:32px;text-align:center;color:var(--muted)">Nenhum pedido em aberto</div>';
+    return;
+  }
+
+  // Soma todas as peças necessárias por SKU
+  const necessario = {};
+  pedidosAbertos.forEach(p => {
+    p.itens.forEach(item => {
+      if (!necessario[item.sku]) necessario[item.sku] = { qtd: 0, cor: item.cor, tamanho: item.tamanho, pedidos: new Set() };
+      necessario[item.sku].qtd += item.qtd;
+      necessario[item.sku].pedidos.add(p.numero);
+    });
+  });
+
+  // Cruza com estoque
+  const resultado = Object.entries(necessario).map(([sku, info]) => {
+    const estoque = STATE.estoque[sku]?.saldo || 0;
+    const produzir = Math.max(0, info.qtd - estoque);
+    const status = produzir === 0 ? 'ok' : estoque < 0 ? 'critico' : 'falta';
+    return { sku, ...info, pedidos: [...info.pedidos], estoque, produzir, status };
+  }).sort((a,b) => {
+    const o = {critico:0, falta:1, ok:2};
+    return (o[a.status]-o[b.status]) || b.produzir-a.produzir;
+  });
+
+  const totalNec = resultado.reduce((a,r) => a+r.qtd, 0);
+  const totalProd = resultado.reduce((a,r) => a+r.produzir, 0);
+  const criticos = resultado.filter(r => r.status === 'critico').length;
+  const faltam = resultado.filter(r => r.status === 'falta').length;
+  const ok = resultado.filter(r => r.status === 'ok').length;
+
+  // Atualiza badge
+  document.getElementById('nb-nec').textContent = criticos + faltam;
+
+  container.innerHTML = `
+    <div class="stats" style="grid-template-columns:repeat(4,1fr);margin-bottom:16px">
+      <div class="stat"><div class="stat-label">Pedidos abertos</div><div class="stat-value" style="color:var(--info)">${pedidosAbertos.length}</div><div class="stat-sub">${totalNec} peças no total</div></div>
+      <div class="stat"><div class="stat-label">Produzir agora</div><div class="stat-value" style="color:var(--danger)">${totalProd}</div><div class="stat-sub">peças faltando</div></div>
+      <div class="stat"><div class="stat-label">SKUs críticos</div><div class="stat-value" style="color:var(--danger)">${criticos}</div><div class="stat-sub">estoque negativo</div></div>
+      <div class="stat"><div class="stat-label">SKUs ok</div><div class="stat-value" style="color:var(--accent)">${ok}</div><div class="stat-sub">estoque suficiente</div></div>
+    </div>
+
+    ${totalProd > 0 ? `
+    <div class="card" style="margin-bottom:14px">
+      <div class="card-header" style="background:rgba(239,68,68,.05);border-bottom-color:rgba(239,68,68,.2)">
+        <span class="card-title" style="color:var(--danger)">🔴 O que precisa produzir agora</span>
+        <span class="text-muted text-sm">${totalProd} peças para fechar todos os pedidos</span>
+      </div>
+      <table class="table">
+        <thead><tr><th>SKU</th><th>Cor</th><th>Tam</th><th>Pedidos precisam</th><th>Estoque atual</th><th>Produzir</th><th>Ação</th></tr></thead>
+        <tbody>
+          ${resultado.filter(r => r.status !== 'ok').map(r => `
+            <tr style="${r.status==='critico'?'background:rgba(239,68,68,.04)':'background:rgba(245,158,11,.02)'}">
+              <td class="mono" style="font-size:11px;color:var(--accent)">${r.sku}</td>
+              <td class="text-sm">${r.cor||'—'}</td>
+              <td class="mono text-sm">${r.tamanho||'—'}</td>
+              <td class="mono" style="font-weight:600">${r.qtd}</td>
+              <td class="mono ${r.estoque<0?'est-neg':r.estoque===0?'est-zero':'est-pos'}">${r.estoque>0?'+':''}${r.estoque}</td>
+              <td class="mono" style="font-size:16px;font-weight:700;color:var(--danger)">${r.produzir}</td>
+              <td><button class="btn btn-ghost btn-sm" onclick="openEntrada('${r.sku}')">+ Entrada</button></td>
+            </tr>
+          `).join('')}
+        </tbody>
+      </table>
+    </div>` : '<div class="alert alert-success" style="margin-bottom:14px">✓ Estoque suficiente para todos os pedidos em aberto!</div>'}
+
+    <div class="card">
+      <div class="card-header"><span class="card-title">✓ SKUs com estoque suficiente</span></div>
+      <table class="table">
+        <thead><tr><th>SKU</th><th>Cor</th><th>Tam</th><th>Pedidos precisam</th><th>Estoque</th><th>Sobra</th></tr></thead>
+        <tbody>
+          ${resultado.filter(r => r.status === 'ok').map(r => `
+            <tr>
+              <td class="mono" style="font-size:11px;color:var(--muted)">${r.sku}</td>
+              <td class="text-sm text-muted">${r.cor||'—'}</td>
+              <td class="mono text-sm text-muted">${r.tamanho||'—'}</td>
+              <td class="mono text-sm">${r.qtd}</td>
+              <td class="mono est-pos">+${r.estoque}</td>
+              <td class="mono est-pos">+${r.estoque - r.qtd}</td>
+            </tr>
+          `).join('')}
+        </tbody>
+      </table>
+    </div>`;
+}
+
+// ============================================================
+// LANÇAMENTO DE LOTE
+// ============================================================
+let LOTE = [];
+
+function openEntrada(skuPre = '') {
+  LOTE = [];
+  document.getElementById('ent-lote').value = '';
+  document.getElementById('ent-sku').value = skuPre;
+  document.getElementById('ent-qtd').value = '1';
+  const dl = document.getElementById('dl-skus');
+  dl.innerHTML = Object.keys(STATE.estoque).sort().map(s => `<option value="${s}">`).join('');
+  renderLote();
+  openModal('modal-entrada');
+  setTimeout(() => document.getElementById('ent-sku').focus(), 100);
+}
+
+function addItemLote() {
+  const sku = document.getElementById('ent-sku').value.trim().toUpperCase();
+  const qtd = parseInt(document.getElementById('ent-qtd').value);
+  if (!sku || !qtd || qtd < 1) return;
+
+  // Verifica se SKU já está no lote
+  const existente = LOTE.find(i => i.sku === sku);
+  if (existente) { existente.qtd += qtd; }
+  else { LOTE.push({ sku, qtd }); }
+
+  document.getElementById('ent-sku').value = '';
+  document.getElementById('ent-qtd').value = '1';
+  document.getElementById('ent-sku').focus();
+  renderLote();
+}
+
+function renderLote() {
+  const container = document.getElementById('lote-itens');
+  const btnConfirmar = document.getElementById('btn-confirmar-lote');
+
+  if (LOTE.length === 0) {
+    container.innerHTML = '<div style="text-align:center;color:var(--muted);padding:20px 0;font-size:13px">Nenhum item no lote ainda</div>';
+    btnConfirmar.disabled = true;
+    document.getElementById('lote-total').textContent = '';
+    return;
+  }
+
+  const total = LOTE.reduce((a,i) => a+i.qtd, 0);
+  container.innerHTML = `<table class="table" style="margin-bottom:0">
+    <thead><tr><th>SKU</th><th>Quantidade</th><th></th></tr></thead>
+    <tbody>
+      ${LOTE.map((item, idx) => `<tr>
+        <td class="mono" style="font-size:12px;color:var(--accent)">${item.sku}</td>
+        <td class="mono" style="font-weight:600;color:var(--accent)">+${item.qtd}</td>
+        <td><button class="btn btn-ghost btn-sm" onclick="removeLoteItem(${idx})" style="font-size:11px;padding:3px 8px">✕</button></td>
+      </tr>`).join('')}
+    </tbody>
+  </table>`;
+
+  document.getElementById('lote-total').textContent = `Total: ${total} peças em ${LOTE.length} SKU${LOTE.length>1?'s':''}`;
+  btnConfirmar.disabled = false;
+}
+
+function removeLoteItem(idx) {
+  LOTE.splice(idx, 1);
+  renderLote();
+}
+
+function confirmarLote() {
+  if (LOTE.length === 0) return;
+  const loteId = document.getElementById('ent-lote').value.trim() || `Lote ${new Date().toLocaleDateString('pt-BR')}`;
+  let total = 0;
+
+  LOTE.forEach(item => {
+    if (!STATE.estoque[item.sku]) STATE.estoque[item.sku] = { saldo: 0, entradas: [], saidas: [], minSeguranca: 0 };
+    STATE.estoque[item.sku].saldo += item.qtd;
+    STATE.estoque[item.sku].entradas.push({ qtd: item.qtd, data: new Date(), obs: loteId });
+    total += item.qtd;
+  });
+
+  addLog(`${loteId}: +${total} peças em ${LOTE.length} SKUs`, 'success');
+  LOTE = [];
+  closeModal('modal-entrada');
+  renderEstoque();
+  atualizarDashboard();
   salvarEstado();
-  return n;
-};
+
+  // Recalcula necessidade se estiver na página
+  if (document.getElementById('page-necessidade').classList.contains('active')) calcularNecessidade();
+}
+
+// Mantém compatibilidade com confirmarEntrada
+function confirmarEntrada() { confirmarLote(); }
 
 // INIT
 const restaurado = carregarEstado();
+loadConfig();
 atualizarDashboard();
 if (restaurado) {
-  document.getElementById('last-sync').textContent = `Estado restaurado — ${STATE.pedidos.filter(p=>p.status!=='despachado').length} pedidos ativos`;
+  document.getElementById('last-sync').textContent = `Restaurado — ${STATE.pedidos.filter(p=>p.status!=='despachado').length} pedidos ativos`;
 }
 </script>
 </body>
