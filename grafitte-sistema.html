@@ -1602,17 +1602,34 @@ async function carregarBanco() {
     const res = await fetch(`${STATE.config.backend}/api/estado`, { signal: AbortSignal.timeout(15000) });
     if (!res.ok) { console.warn('Banco HTTP error:', res.status); return false; }
     const d = await res.json();
-    console.log('Banco resposta:', d.sucesso, 'pedidos:', d.pedidos?.length, 'estoque:', Object.keys(d.estoque||{}).length);
     if (!d.sucesso) return false;
-    // Só substitui se o banco tem dados
+
     if (d.pedidos?.length > 0) {
-      STATE.pedidos = d.pedidos.map(p => ({ ...p, createdAt: new Date(p.createdAt) }));
+      STATE.pedidos = d.pedidos.map(p => ({
+        ...p,
+        createdAt: new Date(p.createdAt),
+        // Garante que itens e bordado são arrays/objetos corretos
+        itens: Array.isArray(p.itens) ? p.itens : (typeof p.itens === 'string' ? JSON.parse(p.itens) : []),
+        bordado: typeof p.bordado === 'string' ? JSON.parse(p.bordado) : (p.bordado || {temBordado:false}),
+        entrega: typeof p.entrega === 'string' ? JSON.parse(p.entrega) : (p.entrega || {}),
+        etapas: typeof p.etapas === 'string' ? JSON.parse(p.etapas) : (p.etapas || {}),
+        prazoMaxDias: p.prazoMaxDias || (p.bordado?.temBordado ? STATE.config.prazo+2 : STATE.config.prazo)
+      }));
     }
+
     if (Object.keys(d.estoque||{}).length > 0) {
+      // Garante que entradas/saidas são arrays
+      Object.entries(d.estoque).forEach(([sku, e]) => {
+        d.estoque[sku] = {
+          ...e,
+          entradas: Array.isArray(e.entradas) ? e.entradas : [],
+          saidas: Array.isArray(e.saidas) ? e.saidas : []
+        };
+      });
       STATE.estoque = d.estoque;
     }
+
     addLog(`Banco: ${d.pedidos?.length||0} pedidos, ${Object.keys(d.estoque||{}).length} SKUs`, 'success');
-    // Salva no cache local também
     localStorage.setItem('grafitte_v3', JSON.stringify({pedidos:STATE.pedidos,estoque:STATE.estoque,config:STATE.config,v:'3.0'}));
     return true;
   } catch(e) {
