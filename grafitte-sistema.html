@@ -1568,14 +1568,40 @@ async function testarConexao() {
   } catch(e) { el.textContent='✕ Sem conexão'; el.style.color='var(--danger)'; }
 }
 
-// PERSISTÊNCIA
-function salvarEstado() {
+// ============================================================
+// PERSISTÊNCIA — banco de dados no Railway
+// ============================================================
+async function salvarEstado() {
   try {
+    // Salva localmente como backup
     localStorage.setItem('grafitte_v2', JSON.stringify({
       pedidos: STATE.pedidos, estoque: STATE.estoque, config: STATE.config, v: '2.1'
     }));
-  } catch(e) {}
+    // Salva no banco
+    await fetch(`${STATE.config.backend}/api/estado`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ pedidos: STATE.pedidos, estoque: STATE.estoque })
+    });
+  } catch(e) { console.warn('Erro ao salvar:', e); }
 }
+
+async function carregarEstadoBanco() {
+  try {
+    const res = await fetch(`${STATE.config.backend}/api/estado`);
+    if (!res.ok) return false;
+    const data = await res.json();
+    if (!data.sucesso || !data.pedidos?.length) return false;
+    STATE.pedidos = data.pedidos.map(p => ({ ...p, createdAt: new Date(p.createdAt) }));
+    STATE.estoque = data.estoque || {};
+    addLog(`Estado restaurado do banco: ${STATE.pedidos.length} pedidos`, 'success');
+    return true;
+  } catch(e) {
+    console.warn('Erro ao carregar banco:', e);
+    return false;
+  }
+}
+
 function carregarEstado() {
   try {
     const raw = localStorage.getItem('grafitte_v2');
@@ -1761,13 +1787,20 @@ function confirmarLote() {
   });
 
   addLog(`${loteId}: +${total} peças em ${LOTE.length} SKUs`, 'success');
+
+  // Salva lote no banco
+  fetch(`${STATE.config.backend}/api/estoque/lote`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ nome: loteId, itens: LOTE })
+  }).catch(e => console.warn('Erro ao salvar lote:', e));
+
   LOTE = [];
   closeModal('modal-entrada');
   renderEstoque();
   atualizarDashboard();
   salvarEstado();
 
-  // Recalcula necessidade se estiver na página
   if (document.getElementById('page-necessidade').classList.contains('active')) calcularNecessidade();
 }
 
@@ -1775,12 +1808,19 @@ function confirmarLote() {
 function confirmarEntrada() { confirmarLote(); }
 
 // INIT
-const restaurado = carregarEstado();
+const restauradoLocal = carregarEstado();
 loadConfig();
 atualizarDashboard();
-if (restaurado) {
-  document.getElementById('last-sync').textContent = `Restaurado — ${STATE.pedidos.filter(p=>p.status!=='despachado').length} pedidos ativos`;
-}
+
+// Tenta carregar do banco (mais atualizado)
+carregarEstadoBanco().then(restauradoBanco => {
+  if (restauradoBanco) {
+    atualizarDashboard();
+    document.getElementById('last-sync').textContent = `Restaurado do banco — ${STATE.pedidos.filter(p=>p.status!=='despachado').length} pedidos ativos`;
+  } else if (restauradoLocal) {
+    document.getElementById('last-sync').textContent = `Restaurado localmente — ${STATE.pedidos.filter(p=>p.status!=='despachado').length} pedidos ativos`;
+  }
+});
 </script>
 </body>
 </html>
