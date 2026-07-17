@@ -218,6 +218,7 @@ body{background:var(--bg);color:var(--text);font-family:var(--font);font-size:14
     </div>
     <div class="topbar-right">
       <button class="btn btn-ghost btn-sm" onclick="importarHistorico()" id="btn-hist">📚 Histórico (PCP)</button>
+      <button class="btn btn-ghost btn-sm" onclick="sincronizar()" id="btn-sync">⟳ Sincronizar</button>
       <button class="btn btn-primary" onclick="importarPedidos()" id="btn-import">↻ Importar pedidos</button>
     </div>
   </div>
@@ -410,7 +411,7 @@ body{background:var(--bg);color:var(--text);font-family:var(--font);font-size:14
       </div>
       <div class="form-group">
         <label class="form-label">Auto-sync (minutos, 0=desligado)</label>
-        <input class="form-input" type="number" id="cfg-autosync" value="30" min="0">
+        <input class="form-input" type="number" id="cfg-autosync" value="2" min="0">
       </div>
       <button class="btn btn-primary" onclick="salvarConfig()">Salvar</button>
     </div>
@@ -490,7 +491,7 @@ const STATE = {
     backend: 'https://grafitte-backend-production.up.railway.app',
     prazo: 3,
     leadTime: 7,
-    autoSync: 30
+    autoSync: 2
   }
 };
 
@@ -1542,16 +1543,7 @@ async function testarConexao() {
 }
 
 // AUTO-SYNC
-function iniciarAutoSync() {
-  if(autoSyncTimer) clearInterval(autoSyncTimer);
-  if(STATE.config.autoSync>0) {
-    autoSyncTimer=setInterval(()=>{
-      addLog(`Auto-sync...`,'info');
-      importarPedidos();
-    }, STATE.config.autoSync*60*1000);
-    addLog(`Auto-sync ativo: a cada ${STATE.config.autoSync} min`,'info');
-  }
-}
+// iniciarAutoSync definido acima
 
 // PERSISTÊNCIA
 async function salvarEstado() {
@@ -1603,6 +1595,52 @@ async function carregarBanco() {
   } catch(e) {
     console.warn('Banco indisponível:', e.message);
     return false;
+  }
+}
+
+// ============================================================
+// SINCRONIZAR COM BANCO
+// ============================================================
+async function sincronizar() {
+  const btn = document.getElementById('btn-sync');
+  btn.disabled = true;
+  btn.innerHTML = '<span class="spinner"></span> Sincronizando...';
+
+  try {
+    const ok = await carregarBanco();
+    if (ok) {
+      atualizarDashboard();
+      renderPaginaAtiva();
+      const ativos = STATE.pedidos.filter(p => !['expedido','cancelado'].includes(p.status)).length;
+      document.getElementById('last-sync').textContent = `✓ Sincronizado às ${new Date().toLocaleTimeString('pt-BR')} — ${ativos} pedidos ativos`;
+      addLog('✓ Sincronizado com banco', 'success');
+    } else {
+      addLog('Banco indisponível', 'warn');
+    }
+  } catch(e) {
+    addLog('Erro ao sincronizar: ' + e.message, 'error');
+  }
+
+  btn.disabled = false;
+  btn.innerHTML = '⟳ Sincronizar';
+}
+
+// AUTO-SYNC melhorado — sincroniza com banco a cada X minutos
+function iniciarAutoSync() {
+  if (autoSyncTimer) clearInterval(autoSyncTimer);
+  if (STATE.config.autoSync > 0) {
+    autoSyncTimer = setInterval(async () => {
+      addLog(`Auto-sync...`, 'info');
+      // Importa novos pedidos da Shoppub
+      await importarPedidos();
+      // Sincroniza estado do banco (etapas, estoque)
+      const ok = await carregarBanco();
+      if (ok) {
+        atualizarDashboard();
+        renderPaginaAtiva();
+      }
+    }, STATE.config.autoSync * 60 * 1000);
+    addLog(`Auto-sync ativo: a cada ${STATE.config.autoSync} min`, 'info');
   }
 }
 
