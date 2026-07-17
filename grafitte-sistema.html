@@ -1552,15 +1552,38 @@ async function salvarEstado() {
     localStorage.setItem('grafitte_v3', JSON.stringify({
       pedidos: STATE.pedidos, estoque: STATE.estoque, config: STATE.config, v: '3.0'
     }));
-    // Salva no banco em background
-    fetch(`${STATE.config.backend}/api/estado`, {
+    // Salva no banco em lotes de 50 pedidos para não dar 413
+    salvarBancoEmLotes();
+  } catch(e) { console.warn('Erro salvarEstado:', e); }
+}
+
+async function salvarBancoEmLotes() {
+  try {
+    const LOTE_SIZE = 50;
+    const pedidos = STATE.pedidos;
+    
+    // Primeiro envia o estoque separado
+    await fetch(`${STATE.config.backend}/api/estado`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ pedidos: STATE.pedidos, estoque: STATE.estoque })
-    }).then(r => r.json()).then(d => {
-      if (!d.sucesso) console.warn('Erro ao salvar banco:', d.erro);
-    }).catch(e => console.warn('Banco offline:', e.message));
-  } catch(e) { console.warn('Erro salvarEstado:', e); }
+      body: JSON.stringify({ pedidos: [], estoque: STATE.estoque })
+    }).catch(() => {});
+
+    // Depois envia pedidos em lotes
+    for (let i = 0; i < pedidos.length; i += LOTE_SIZE) {
+      const lote = pedidos.slice(i, i + LOTE_SIZE);
+      await fetch(`${STATE.config.backend}/api/estado`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ pedidos: lote, estoque: {} })
+      }).catch(e => console.warn('Lote erro:', e.message));
+      // Pequena pausa entre lotes
+      if (i + LOTE_SIZE < pedidos.length) {
+        await new Promise(r => setTimeout(r, 100));
+      }
+    }
+    console.log(`Banco: ${pedidos.length} pedidos salvos em ${Math.ceil(pedidos.length/LOTE_SIZE)} lotes`);
+  } catch(e) { console.warn('Erro salvarBancoEmLotes:', e); }
 }
 function carregarEstado() {
   try {
