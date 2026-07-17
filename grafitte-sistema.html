@@ -1556,9 +1556,19 @@ function iniciarAutoSync() {
 // PERSISTÊNCIA
 async function salvarEstado() {
   try {
-    localStorage.setItem('grafitte_v3',JSON.stringify({pedidos:STATE.pedidos,estoque:STATE.estoque,config:STATE.config,v:'3.0'}));
-    await fetch(`${STATE.config.backend}/api/estado`,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({pedidos:STATE.pedidos,estoque:STATE.estoque})}).catch(()=>{});
-  } catch(e){}
+    // Salva local imediatamente
+    localStorage.setItem('grafitte_v3', JSON.stringify({
+      pedidos: STATE.pedidos, estoque: STATE.estoque, config: STATE.config, v: '3.0'
+    }));
+    // Salva no banco em background
+    fetch(`${STATE.config.backend}/api/estado`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ pedidos: STATE.pedidos, estoque: STATE.estoque })
+    }).then(r => r.json()).then(d => {
+      if (!d.sucesso) console.warn('Erro ao salvar banco:', d.erro);
+    }).catch(e => console.warn('Banco offline:', e.message));
+  } catch(e) { console.warn('Erro salvarEstado:', e); }
 }
 function carregarEstado() {
   try {
@@ -1574,22 +1584,51 @@ function carregarEstado() {
 }
 async function carregarBanco() {
   try {
-    const res=await fetch(`${STATE.config.backend}/api/estado`);
-    if(!res.ok) return false;
-    const d=await res.json();
-    if(!d.sucesso||!d.pedidos?.length) return false;
-    STATE.pedidos=d.pedidos.map(p=>({...p,createdAt:new Date(p.createdAt)}));
-    STATE.estoque=d.estoque||{};
-    addLog(`Banco: ${STATE.pedidos.length} pedidos restaurados`,'success');
+    const res = await fetch(`${STATE.config.backend}/api/estado`, { signal: AbortSignal.timeout(15000) });
+    if (!res.ok) { console.warn('Banco HTTP error:', res.status); return false; }
+    const d = await res.json();
+    console.log('Banco resposta:', d.sucesso, 'pedidos:', d.pedidos?.length, 'estoque:', Object.keys(d.estoque||{}).length);
+    if (!d.sucesso) return false;
+    // Só substitui se o banco tem dados
+    if (d.pedidos?.length > 0) {
+      STATE.pedidos = d.pedidos.map(p => ({ ...p, createdAt: new Date(p.createdAt) }));
+    }
+    if (Object.keys(d.estoque||{}).length > 0) {
+      STATE.estoque = d.estoque;
+    }
+    addLog(`Banco: ${d.pedidos?.length||0} pedidos, ${Object.keys(d.estoque||{}).length} SKUs`, 'success');
+    // Salva no cache local também
+    localStorage.setItem('grafitte_v3', JSON.stringify({pedidos:STATE.pedidos,estoque:STATE.estoque,config:STATE.config,v:'3.0'}));
     return true;
-  } catch(e){return false;}
+  } catch(e) {
+    console.warn('Banco indisponível:', e.message);
+    return false;
+  }
 }
 
 // INIT
-const restaurado=carregarEstado();
+const restaurado = carregarEstado();
 loadConfig();
 atualizarDashboard();
-carregarBanco().then(ok=>{if(ok){atualizarDashboard();document.getElementById('last-sync').textContent=`Banco restaurado — ${STATE.pedidos.filter(p=>!['expedido','cancelado'].includes(p.status)).length} pedidos ativos`;}else if(restaurado){document.getElementById('last-sync').textContent=`Local: ${STATE.pedidos.filter(p=>!['expedido','cancelado'].includes(p.status)).length} pedidos ativos`;}});
+
+if (restaurado) {
+  const ativos = STATE.pedidos.filter(p => !['expedido','cancelado'].includes(p.status)).length;
+  document.getElementById('last-sync').textContent = `Cache local: ${ativos} pedidos ativos — sincronizando com banco...`;
+}
+
+// Carrega do banco (fonte de verdade)
+carregarBanco().then(ok => {
+  if (ok) {
+    atualizarDashboard();
+    const ativos = STATE.pedidos.filter(p => !['expedido','cancelado'].includes(p.status)).length;
+    document.getElementById('last-sync').textContent = `✓ Banco sincronizado — ${ativos} pedidos ativos`;
+  } else if (!restaurado) {
+    document.getElementById('last-sync').textContent = 'Nenhum dado — importe os pedidos';
+  } else {
+    document.getElementById('last-sync').textContent = `Cache local (banco offline) — ${STATE.pedidos.filter(p=>!['expedido','cancelado'].includes(p.status)).length} ativos`;
+  }
+});
+
 iniciarAutoSync();
 </script>
 </body>
