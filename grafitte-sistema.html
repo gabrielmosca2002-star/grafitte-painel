@@ -680,60 +680,88 @@ function processarPedido(p) {
   const statusSite = p.status || 0;
   const statusSiteLabel = {0:'Aberto',1:'Pago',2:'Cancelado',3:'Entregue',4:'Despachado',5:'NF Emitida',6:'Em Separação',7:'Em Produção',12:'Preparando Envio',13:'Em Customização'}[statusSite]||String(statusSite);
 
-  if (statusSite===2) return null; // cancelado
+  if (statusSite===2) return null;
 
-  const itens=[];
-  let bordado={temBordado:false};
+  const grupos = [];
+  let temBordadoGeral = false;
 
-  (p.pedidoitem_set||[]).forEach(item=>{
-    const titulo=item.produto_nome||'';
-    const textoComp=typeof item.complemento==='string'?item.complemento:JSON.stringify(item.complemento||'');
-    const compItems=parseComp(textoComp);
-    const b=parseBordado(compItems);
-    if(b.temBordado) bordado=b;
-    const tam=item.atributo_valor||extrairTam(titulo);
-    const isKit=titulo.toLowerCase().includes('kit');
+  (p.pedidoitem_set||[]).forEach((item, itemIdx) => {
+    const titulo = item.produto_nome || '';
+    const textoComp = typeof item.complemento === 'string' ? item.complemento : JSON.stringify(item.complemento||'');
+    const compItems = parseComp(textoComp);
 
-    if(isKit) {
-      const cores=getCoresPijamas(compItems);
-      if(cores.length>0) {
-        cores.forEach((ci,idx)=>{
-          const cor=ci.valor.trim();
-          const gStr=titulo.toLowerCase().includes('feminino')?'Feminino':'Masculino';
-          const tStr=titulo.toLowerCase().includes('gabardine')?'Gabardine':'Scrub Conjunto Tech';
-          const nomeInd=`Pijama Cirúrgico ${gStr} ${tStr} ${cor}-${tam}`;
-          const sku=gerarSKU(nomeInd);
-          itens.push({nome:nomeInd,sku,cor,tamanho:tam,qtd:1,deKit:titulo,numero:idx+1});
+    // Bordado DESTE item específico
+    const bordadoItem = parseBordado(compItems);
+    if (bordadoItem.temBordado) temBordadoGeral = true;
+
+    const tam = item.atributo_valor || extrairTam(titulo);
+    const isKit = titulo.toLowerCase().includes('kit');
+    const pecas = [];
+
+    if (isKit) {
+      const cores = getCoresPijamas(compItems);
+      if (cores.length > 0) {
+        cores.forEach((ci, idx) => {
+          const cor = ci.valor.trim();
+          const corNorm = normalizarCor(cor);
+          const gStr = titulo.toLowerCase().includes('feminino') ? 'Feminino' : 'Masculino';
+          const tStr = titulo.toLowerCase().includes('gabardine') ? 'Gabardine' : 'Scrub Conjunto Tech';
+          const nomeInd = `Pijama Cirúrgico ${gStr} ${tStr} ${cor}-${tam}`;
+          const sku = gerarSKU(nomeInd);
+          pecas.push({ nome: nomeInd, sku, cor: corNorm, tamanho: tam, qtd: 1, numero: idx+1 });
         });
       } else {
-        itens.push({nome:titulo,sku:'KIT-SEM-COR',cor:'?',tamanho:tam,qtd:1,deKit:titulo,numero:1});
+        pecas.push({ nome: titulo, sku: 'KIT-SEM-COR', cor: '?', tamanho: tam, qtd: 1, numero: 1 });
       }
     } else {
-      const sku=gerarSKU(titulo);
-      let cor=titulo;
+      // Produto individual
+      const sku = gerarSKU(titulo);
+      let cor = titulo;
       [/pijama\s+cir[uú]rgico/gi,/jaleco/gi,/feminino/gi,/masculino/gi,/scrub\s+conjunto/gi,/scrub/gi,/conjunto/gi,/em\s+gabardine/gi,/gabardine/gi,/tech/gi].forEach(r=>cor=cor.replace(r,' '));
-      cor=cor.replace(new RegExp('[- ]'+(tam||'XX')+'\\s*$','i'),'').replace(/\s+/g,' ').trim();
-      itens.push({nome:titulo,sku,cor,tamanho:tam,qtd:item.quantidade||1,deKit:null,numero:1});
+      cor = cor.replace(new RegExp('[- ]'+(tam||'XX')+'\\s*$','i'),'').replace(/\s+/g,' ').trim();
+      const corNorm = normalizarCor(cor);
+      pecas.push({ nome: titulo, sku, cor: corNorm, tamanho: tam, qtd: item.quantidade||1, numero: 1 });
     }
+
+    grupos.push({
+      itemIdx,
+      titulo,
+      isKit,
+      tamanho: tam,
+      bordado: bordadoItem,  // bordado DESTE item específico
+      pecas,
+      totalPecas: pecas.reduce((a,pc) => a + pc.qtd, 0)
+    });
   });
 
-  // Define etapa inicial pelo status do site
-  let etapaInicial = STATUS_MAP[statusSite] || 'separacao';
+  // Flat list para estoque/necessidade
+  const itens = grupos.flatMap(g => g.pecas.map(pc => ({
+    ...pc,
+    deKit: g.isKit ? g.titulo : null,
+    grupoBordado: g.bordado
+  })));
 
+  // Bordado geral = primeiro que encontrar (para compatibilidade)
+  const bordado = grupos.find(g => g.bordado?.temBordado)?.bordado || {temBordado:false};
+
+  let etapaInicial = STATUS_MAP[statusSite] || 'separacao';
   const dataPag = new Date(`${p.data}T${p.hora||'12:00:00'}`);
   const numeroCurto = String(p.shoppub_id||p.id).split('-').pop();
 
   return {
-    id, numero:numeroCurto, numeroCompleto:p.shoppub_id||String(p.id),
-    cliente:p.cliente_nome||'Cliente', email:p.email||'',
-    itens, bordado,
+    id, numero: numeroCurto, numeroCompleto: p.shoppub_id||String(p.id),
+    cliente: p.cliente_nome||'Cliente', email: p.email||'',
+    grupos,
+    itens,
+    bordado,
+    temBordado: temBordadoGeral,
     status: etapaInicial,
     statusSite, statusSiteLabel,
-    etapas:{separacao:false, bordado:bordado.temBordado?false:null, embalagem:false},
+    etapas: {separacao:false, bordado:temBordadoGeral?false:null, embalagem:false},
     createdAt: dataPag,
-    prazoMaxDias: bordado.temBordado ? STATE.config.prazo+2 : STATE.config.prazo,
+    prazoMaxDias: temBordadoGeral ? STATE.config.prazo+2 : STATE.config.prazo,
     total: parseFloat(p.valor_total)||0,
-    entrega:{cep:p.entrega_cep, cidade:p.entrega_cidade, estado:p.entrega_estado, logradouro:p.entrega_logradouro, numero:p.entrega_numero, bairro:p.entrega_bairro, destinatario:p.entrega_destinatario},
+    entrega: {cep:p.entrega_cep, cidade:p.entrega_cidade, estado:p.entrega_estado, logradouro:p.entrega_logradouro, numero:p.entrega_numero, bairro:p.entrega_bairro, destinatario:p.entrega_destinatario},
     transportadora: p.frete_set?.[0]?.transportadora_nome||''
   };
 }
@@ -1808,18 +1836,29 @@ function setSyncStatus(status, msg) {
 
 async function salvarEstado() {
   try {
-    // 1. Salva LOCAL imediatamente (nunca falha)
-    localStorage.setItem('grafitte_v3', JSON.stringify({
-      pedidos: STATE.pedidos,
-      estoque: STATE.estoque,
-      config: STATE.config,
-      v: '3.0',
-      savedAt: new Date().toISOString()
-    }));
-
     setSyncStatus('saving', 'Salvando...');
 
-    // 2. Salva no banco em background
+    // localStorage só guarda etapas e estoque (pequeno) — pedidos completos só no banco
+    // Extrai só as etapas de cada pedido para o cache local
+    const etapasCache = {};
+    STATE.pedidos.forEach(p => {
+      etapasCache[p.id] = { status: p.status, etapas: p.etapas };
+    });
+
+    try {
+      localStorage.setItem('grafitte_etapas', JSON.stringify({
+        etapas: etapasCache,
+        estoque: STATE.estoque,
+        config: STATE.config,
+        v: '3.1',
+        savedAt: new Date().toISOString()
+      }));
+    } catch(e) {
+      // Se ainda estourar, só salva config
+      localStorage.setItem('grafitte_config', JSON.stringify(STATE.config));
+    }
+
+    // Salva tudo no banco
     salvarBanco().then(ok => {
       if (ok) {
         BANCO_SYNC = true;
@@ -1827,13 +1866,9 @@ async function salvarEstado() {
         if (SAVE_RETRY_TIMER) { clearTimeout(SAVE_RETRY_TIMER); SAVE_RETRY_TIMER = null; }
       } else {
         BANCO_SYNC = false;
-        setSyncStatus('error', 'Banco offline — salvo local');
-        // Retry em 30 segundos
+        setSyncStatus('error', 'Banco offline — etapas salvas local');
         if (!SAVE_RETRY_TIMER) {
-          SAVE_RETRY_TIMER = setTimeout(() => {
-            SAVE_RETRY_TIMER = null;
-            salvarEstado();
-          }, 30000);
+          SAVE_RETRY_TIMER = setTimeout(() => { SAVE_RETRY_TIMER = null; salvarEstado(); }, 30000);
         }
       }
     });
@@ -1930,12 +1965,28 @@ async function carregarBanco() {
       STATE.estoque = d.estoque;
     }
 
+    // Aplica etapas do cache local (ações feitas offline)
+    if (STATE._etapasCache) {
+      STATE.pedidos.forEach(p => {
+        const cache = STATE._etapasCache[p.id];
+        if (cache) {
+          // Cache local prevalece se pedido foi movido além do banco
+          const ordemEtapas = ['separacao','bordado','embalagem','etiqueta','expedido'];
+          const idxBanco = ordemEtapas.indexOf(p.status);
+          const idxCache = ordemEtapas.indexOf(cache.status);
+          if (idxCache > idxBanco) {
+            p.status = cache.status;
+            p.etapas = cache.etapas;
+          }
+        }
+      });
+      STATE._etapasCache = null;
+    }
+
     const ativos = STATE.pedidos.filter(p => !['expedido','cancelado'].includes(p.status)).length;
     addLog(`Banco: ${d.pedidos?.length||0} pedidos (${ativos} ativos)`, 'success');
     BANCO_SYNC = true;
     setSyncStatus('ok', `${ativos} pedidos ativos`);
-    // Salva cache local atualizado
-    localStorage.setItem('grafitte_v3', JSON.stringify({pedidos:STATE.pedidos,estoque:STATE.estoque,config:STATE.config,v:'3.0'}));
     return true;
   } catch(e) {
     console.warn('Banco indisponível:', e.message);
@@ -2038,24 +2089,26 @@ if (restaurado) {
 }
 
 // Carrega do banco (fonte de verdade)
-setSyncStatus('saving', 'Conectando...');
+setSyncStatus('saving', 'Carregando...');
 carregarBanco().then(ok => {
   if (ok) {
     atualizarDashboard();
     const ativos = STATE.pedidos.filter(p => !['expedido','cancelado'].includes(p.status)).length;
-    document.getElementById('last-sync').textContent = `✓ Banco sincronizado — ${ativos} pedidos ativos`;
+    document.getElementById('last-sync').textContent = `✓ ${ativos} pedidos ativos`;
     setSyncStatus('ok', `${ativos} pedidos ativos`);
-  } else if (restaurado) {
-    const ativos = STATE.pedidos.filter(p => !['expedido','cancelado'].includes(p.status)).length;
-    document.getElementById('last-sync').textContent = `Cache local — ${ativos} pedidos (banco offline)`;
-    setSyncStatus('offline', 'Banco offline');
-    // Tenta novamente em 10 segundos
+  } else {
+    document.getElementById('last-sync').textContent = 'Banco offline — reconectando...';
+    setSyncStatus('error', 'Banco offline');
+    // Tenta novamente em 5 e 15 segundos
     setTimeout(() => carregarBanco().then(ok2 => {
       if (ok2) { atualizarDashboard(); setSyncStatus('ok', 'Reconectado!'); }
-    }), 10000);
-  } else {
-    document.getElementById('last-sync').textContent = 'Sem dados — importe os pedidos';
-    setSyncStatus('offline', 'Sem dados');
+      else {
+        setTimeout(() => carregarBanco().then(ok3 => {
+          if (ok3) { atualizarDashboard(); setSyncStatus('ok', 'Reconectado!'); }
+          else setSyncStatus('error', 'Banco indisponível');
+        }), 15000);
+      }
+    }), 5000);
   }
 });
 
