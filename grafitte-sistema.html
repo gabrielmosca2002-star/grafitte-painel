@@ -184,6 +184,10 @@ body{background:var(--bg);color:var(--text);font-family:var(--font);font-size:14
   <div class="logo">
     <div class="brand">Grafitte</div>
     <div class="sub">Sistema de Gestão</div>
+    <div id="sync-status" style="margin-top:8px;font-size:10px;display:flex;align-items:center;gap:5px;color:var(--muted)">
+      <span id="sync-dot" style="width:7px;height:7px;border-radius:50%;background:var(--faint);display:inline-block;flex-shrink:0"></span>
+      <span id="sync-txt">Aguardando...</span>
+    </div>
   </div>
   <nav class="nav">
     <div class="nav-section">Principal</div>
@@ -525,34 +529,63 @@ function normSKU(s) {
   const sb = {'á':'A','à':'A','â':'A','ã':'A','é':'E','ê':'E','í':'I','ó':'O','ô':'O','õ':'O','ú':'U','ç':'C'};
   return s.split('').map(c=>sb[c.toLowerCase()]||c.toUpperCase()).join('').replace(/[^A-Z0-9]/g,'');
 }
+
+function normalizarCor(cor) {
+  const c = cor.toLowerCase().trim();
+  const mapa = {
+    'bordo':'VINHO','bordô':'VINHO',
+    'verde':'VERDEMILITAR','verde militar':'VERDEMILITAR',
+    'rosa pink':'ROSAPINK','rosa-pink':'ROSAPINK',
+    'azul marinho':'AZULMARINHO',
+    'azul royal':'AZULROYAL',
+    'azul celeste':'AZULCELESTE',
+    'verde menta':'VERDEMENTA',
+    'verde claro':'VERDECLARO',
+    'azul claro':'AZULCLARO'
+  };
+  return mapa[c] || normSKU(cor);
+}
+
 function extrairTam(nome) {
   const m = nome.match(/[- ](PP|P|M|GG|G|XG)\s*$/i);
   return m ? m[1].toUpperCase() : '';
 }
+
 function gerarSKU(nome) {
   if (!nome) return 'SEM-SKU';
   const n = nome.toLowerCase();
-  const tipo = n.includes('pijama')?'PIJ':n.includes('jaleco')?'JAL':'OUT';
-  const gen = n.includes('feminino')?'FEM':n.includes('masculino')?'MAS':'UNI';
-  const tec = (n.includes('gabardine')||n.includes('gabardina'))?'GAB':'TECH';
-  let sub='';
-  if (tipo==='JAL') {
-    if(n.includes('manga curta'))sub='MC';
-    else if(n.includes('manga longa'))sub='ML';
-    else if(n.includes('ziper')||n.includes('zíper'))sub='ZIP';
-    else if(n.includes('gola padre')||n.includes('padre'))sub='GP';
-    else if(n.includes('botao embutido')||n.includes('botão embutido'))sub='BTN';
-    else if(n.includes('acinturado'))sub='ACIN';
-  }
+  const isGab = n.includes('gabardine') || n.includes('gabardina');
+  const isJal = n.includes('jaleco');
+  const tipo = n.includes('pijama') ? 'PIJ' : isJal ? 'JAL' : 'OUT';
+  const gen = n.includes('feminino') ? 'FEM' : n.includes('masculino') ? 'MAS' : 'UNI';
   const tam = extrairTam(nome);
-  let cor = nome;
-  if (tam) cor = cor.replace(new RegExp('[- ]'+tam+'\\s*$','i'),'');
-  [/pijama\s+cir[uú]rgico/gi,/jaleco/gi,/feminino/gi,/masculino/gi,/scrub\s+conjunto/gi,/scrub/gi,/conjunto/gi,/em\s+gabardine/gi,/de\s+z[ií]per/gi,/gabardine/gi,/gabardina/gi,/manga\s+curta/gi,/manga\s+longa/gi,/gola\s+padre/gi,/com\s+bot[aã]o\s+embutido/gi,/bot[aã]o\s+embutido/gi,/z[ií]per/gi,/acinturado/gi,/tech/gi,/\bem\b/gi,/\bde\b/gi,/\bdo\b/gi,/\bda\b/gi].forEach(r=>cor=cor.replace(r,' '));
+
+  // GABARDINE e JALECO — formato com nome completo sem tamanho
+  if (isGab || isJal) {
+    let nomeBase = nome.trim();
+    if (tam) nomeBase = nomeBase.replace(new RegExp('[- ]' + tam + '\\s*$','i'), '').trim();
+    // Converte para SKU: remove acentos, substitui espaços por traço
+    const partes = nomeBase.split(/[\s]+/).map(p => normSKU(p)).filter(Boolean);
+    const skuBase = partes.join('-');
+    return tam ? skuBase + '-' + tam : skuBase;
+  }
+
+  // TECH — formato curto: PIJ-FEM-TECH-COR-TAM
+  let cor = nome.trim();
+  if (tam) cor = cor.replace(new RegExp('[- ]' + tam + '\\s*$','i'), '').trim();
+  [
+    /pijama\s+cir[uú]rgico/gi, /feminino/gi, /masculino/gi,
+    /scrub\s+conjunto/gi, /scrub/gi, /conjunto/gi, /tech/gi,
+    /\bem\b/gi, /\bde\b/gi, /\bdo\b/gi, /\bda\b/gi
+  ].forEach(r => cor = cor.replace(r, ' '));
   cor = cor.replace(/\s*-\s*/g,' ').replace(/\s+/g,' ').trim();
-  const p=[tipo,gen,tec]; if(sub)p.push(sub); if(cor)p.push(normSKU(cor)); if(tam)p.push(tam);
+
+  const corNorm = normalizarCor(cor);
+  const p = [tipo, gen, 'TECH'];
+  if (corNorm) p.push(corNorm);
+  if (tam) p.push(tam);
   return p.join('-');
 }
-
 // ============================================================
 // PARSE COMPLEMENTO SHOPPUB
 // ============================================================
@@ -797,7 +830,7 @@ async function avancar(id) {
 
   if(p.status==='separacao') {
     p.etapas.separacao=true;
-    novaEtapa=p.bordado.temBordado?'bordado':'embalagem';
+    novaEtapa=p.temBordado?'bordado':'embalagem';
     p.status=novaEtapa;
     addLog(`#${p.numero} → ${novaEtapa}`,'success');
     await atualizarSite(p.id, novaEtapa);
@@ -1004,16 +1037,45 @@ function renderSeparacao() {
   const busca=document.getElementById('busca-sep')?.value||'';
   renderPorDia(pedidos,'sep-container',busca,'sep-total',p=>{
     const pi=prazoInfo(p);
-    const isKit=p.itens.some(i=>i.deKit);
-    const skus=[...new Set(p.itens.map(i=>i.sku))];
     const total=p.itens.reduce((a,i)=>a+i.qtd,0);
-    return `<tr class="${pi.atrasado?'atrasado':''}">
-      <td><span class="mono" style="color:var(--accent);cursor:pointer;font-weight:600" onclick="abrirDetalhe('${p.id}')">#${p.numero}</span></td>
-      <td><div style="font-weight:500">${p.cliente}</div><div class="text-sm text-muted">${p.email}</div></td>
-      <td><div>${skus.map(s=>`<span class="sku-tag">${s}</span>`).join('')}</div><div class="text-sm text-muted mt8">${total} peça${total>1?'s':''}</div></td>
-      <td><div style="display:flex;gap:4px">${isKit?'<span class="badge b-kit">📦 Kit</span>':''}${p.bordado.temBordado?'<span class="badge b-bord-tag">✦ Bordado</span>':''}</div></td>
-      <td><span class="prazo ${pi.cls}">${pi.txt}</span></td>
-      <td><button class="btn btn-primary btn-sm" onclick="avancar('${p.id}')">✓ Separado</button></td>
+
+    // Monta grupos com checklist por peça
+    const gruposHtml = (p.grupos||[]).map((g,gi) => {
+      const b = g.bordado;
+      const bordHtml = b.temBordado ? `
+        <div style="margin-top:5px;padding:5px 8px;background:rgba(167,139,250,.08);border:1px solid rgba(167,139,250,.2);border-radius:5px;font-size:10px;color:var(--purple);font-weight:600">
+          ✦ ${[b.nome,b.profissao,b.tipografia,b.cor].filter(Boolean).join(' · ')}${b.logo?' 🔰 '+b.posicaoLogo:''}
+        </div>` : '';
+      const pecasHtml = g.pecas.map((pc,pi2) => {
+        const chkId = `sep-${p.id}-${gi}-${pi2}`;
+        // Para quantidade > 1 mostra linha com ×N
+        return `<div style="display:flex;align-items:center;gap:6px;margin-top:4px">
+          <input type="checkbox" id="${chkId}" style="width:15px;height:15px;cursor:pointer;accent-color:var(--accent)" onchange="checkSep('${p.id}')">
+          <span class="sku-tag" style="color:var(--accent)">${pc.sku}</span>
+          <span style="font-size:11px;color:var(--muted)">${pc.cor||''} · ${pc.tamanho||''}</span>
+          ${pc.qtd>1?`<span style="font-size:11px;font-weight:700;color:var(--warn);background:rgba(245,158,11,.1);padding:1px 5px;border-radius:4px">×${pc.qtd}</span>`:''}
+        </div>`;
+      }).join('');
+      return `<div style="padding:6px 0;${gi>0?'border-top:1px solid var(--border);margin-top:6px;padding-top:6px':''}">
+        <div style="font-size:11px;color:var(--muted);margin-bottom:3px">${g.isKit?'📦 Kit':'👕 Individual'} · ${g.tamanho} · ${g.totalPecas} peça${g.totalPecas>1?'s':''}</div>
+        ${pecasHtml}
+        ${bordHtml}
+      </div>`;
+    }).join('');
+
+    return `<tr class="${pi.atrasado?'atrasado':''}" id="sep-row-${p.id}">
+      <td style="vertical-align:top;padding-top:12px"><span class="mono" style="color:var(--accent);cursor:pointer;font-weight:600" onclick="abrirDetalhe('${p.id}')">#${p.numero}</span></td>
+      <td style="vertical-align:top;padding-top:12px"><div style="font-weight:500">${p.cliente}</div><div class="text-sm text-muted">${p.email}</div></td>
+      <td style="vertical-align:top">${gruposHtml}</td>
+      <td style="vertical-align:top;padding-top:12px">
+        <div class="text-sm" style="font-family:var(--mono);font-weight:600">${total} peça${total>1?'s':''}</div>
+        ${p.temBordado?'<div class="badge b-bord-tag" style="margin-top:4px">✦ Bordado</div>':''}
+      </td>
+      <td style="vertical-align:top;padding-top:12px"><span class="prazo ${pi.cls}">${pi.txt}</span></td>
+      <td style="vertical-align:top;padding-top:12px">
+        <button class="btn btn-primary btn-sm" id="btn-sep-${p.id}" onclick="avancar('${p.id}')" disabled style="opacity:.4">✓ Separado</button>
+        <div style="font-size:10px;color:var(--muted);margin-top:4px;text-align:center" id="sep-prog-${p.id}">marque todos</div>
+      </td>
     </tr>`;
   });
 }
@@ -1023,25 +1085,33 @@ function renderBordado() {
   const busca=document.getElementById('busca-bord')?.value||'';
   renderPorDia(pedidos,'bord-container',busca,'bord-total',p=>{
     const pi=prazoInfo(p);
-    const b=p.bordado;
-    const skus=[...new Set(p.itens.map(i=>i.sku))];
-    return `<tr class="${pi.atrasado?'atrasado':''}">
-      <td><span class="mono" style="color:var(--accent);cursor:pointer;font-weight:600" onclick="abrirDetalhe('${p.id}')">#${p.numero}</span></td>
-      <td><div style="font-weight:500">${p.cliente}</div><div class="text-sm text-muted">${p.email}</div></td>
-      <td><div>${skus.map(s=>`<span class="sku-tag">${s}</span>`).join('')}</div></td>
-      <td>
+    const gruposBord = (p.grupos||[]).filter(g => g.bordado.temBordado);
+
+    const gruposHtml = gruposBord.map((g,gi) => {
+      const b = g.bordado;
+      const pecasHtml = g.pecas.map(pc =>
+        `<span class="sku-tag" style="color:var(--accent)">${pc.sku}</span>`
+      ).join('');
+      return `<div style="${gi>0?'border-top:1px solid var(--border);margin-top:8px;padding-top:8px':''}">
+        <div style="margin-bottom:6px">${pecasHtml}</div>
         <div class="bord-card" style="padding:8px 10px">
           <div class="bord-grid">
             ${b.nome?`<div class="bord-field"><div class="bord-field-label">Nome</div><div class="bord-field-value">${b.nome}</div></div>`:''}
             ${b.profissao?`<div class="bord-field"><div class="bord-field-label">Profissão</div><div class="bord-field-value">${b.profissao}</div></div>`:''}
             ${b.tipografia?`<div class="bord-field"><div class="bord-field-label">Fonte</div><div class="bord-field-value">${b.tipografia}</div></div>`:''}
-            ${b.cor?`<div class="bord-field"><div class="bord-field-label">Cor</div><div class="bord-field-value">${b.cor}</div></div>`:''}
+            ${b.cor?`<div class="bord-field"><div class="bord-field-label">Cor letra</div><div class="bord-field-value">${b.cor}</div></div>`:''}
             ${b.logo?`<div class="bord-logo"><div class="bord-logo-label">🔰 Logo</div><div class="bord-logo-value">📍 ${b.posicaoLogo||'—'}</div></div>`:''}
           </div>
         </div>
-      </td>
-      <td><span class="prazo ${pi.cls}">${pi.txt}</span></td>
-      <td><button class="btn btn-purple btn-sm" onclick="avancar('${p.id}')">✓ Bordado ok</button></td>
+      </div>`;
+    }).join('');
+
+    return `<tr class="${pi.atrasado?'atrasado':''}">
+      <td style="vertical-align:top"><span class="mono" style="color:var(--accent);cursor:pointer;font-weight:600" onclick="abrirDetalhe('${p.id}')">#${p.numero}</span></td>
+      <td style="vertical-align:top"><div style="font-weight:500">${p.cliente}</div><div class="text-sm text-muted">${p.email}</div></td>
+      <td style="vertical-align:top;max-width:500px">${gruposHtml}</td>
+      <td style="vertical-align:top"><span class="prazo ${pi.cls}">${pi.txt}</span></td>
+      <td style="vertical-align:top"><button class="btn btn-purple btn-sm" onclick="avancar('${p.id}')">✓ Bordado ok</button></td>
     </tr>`;
   });
 }
@@ -1546,44 +1616,98 @@ async function testarConexao() {
 // iniciarAutoSync definido acima
 
 // PERSISTÊNCIA
-async function salvarEstado() {
-  try {
-    // Salva local imediatamente
-    localStorage.setItem('grafitte_v3', JSON.stringify({
-      pedidos: STATE.pedidos, estoque: STATE.estoque, config: STATE.config, v: '3.0'
-    }));
-    // Salva no banco em lotes de 50 pedidos para não dar 413
-    salvarBancoEmLotes();
-  } catch(e) { console.warn('Erro salvarEstado:', e); }
+// ============================================================
+// SALVAMENTO ROBUSTO — local + banco com retry
+// ============================================================
+let SAVE_QUEUE = false;
+let SAVE_RETRY_TIMER = null;
+let BANCO_SYNC = false;
+
+function setSyncStatus(status, msg) {
+  const dot = document.getElementById('sync-dot');
+  const txt = document.getElementById('sync-txt');
+  if (!dot || !txt) return;
+  const cores = {
+    ok: 'var(--accent)',
+    saving: 'var(--warn)',
+    error: 'var(--danger)',
+    offline: 'var(--faint)'
+  };
+  dot.style.background = cores[status] || cores.offline;
+  txt.textContent = msg;
+  // Pisca quando salvando
+  dot.style.animation = status === 'saving' ? 'spin .7s linear infinite' : 'none';
 }
 
-async function salvarBancoEmLotes() {
+async function salvarEstado() {
   try {
-    const LOTE_SIZE = 50;
+    // 1. Salva LOCAL imediatamente (nunca falha)
+    localStorage.setItem('grafitte_v3', JSON.stringify({
+      pedidos: STATE.pedidos,
+      estoque: STATE.estoque,
+      config: STATE.config,
+      v: '3.0',
+      savedAt: new Date().toISOString()
+    }));
+
+    setSyncStatus('saving', 'Salvando...');
+
+    // 2. Salva no banco em background
+    salvarBanco().then(ok => {
+      if (ok) {
+        BANCO_SYNC = true;
+        setSyncStatus('ok', `Salvo às ${new Date().toLocaleTimeString('pt-BR', {hour:'2-digit',minute:'2-digit'})}`);
+        if (SAVE_RETRY_TIMER) { clearTimeout(SAVE_RETRY_TIMER); SAVE_RETRY_TIMER = null; }
+      } else {
+        BANCO_SYNC = false;
+        setSyncStatus('error', 'Banco offline — salvo local');
+        // Retry em 30 segundos
+        if (!SAVE_RETRY_TIMER) {
+          SAVE_RETRY_TIMER = setTimeout(() => {
+            SAVE_RETRY_TIMER = null;
+            salvarEstado();
+          }, 30000);
+        }
+      }
+    });
+
+  } catch(e) {
+    console.warn('Erro salvarEstado:', e);
+    setSyncStatus('error', 'Erro ao salvar');
+  }
+}
+
+async function salvarBanco() {
+  try {
+    const LOTE = 50;
     const pedidos = STATE.pedidos;
-    
-    // Primeiro envia o estoque separado
-    await fetch(`${STATE.config.backend}/api/estado`, {
+
+    // Salva estoque
+    const r0 = await fetch(`${STATE.config.backend}/api/estado`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ pedidos: [], estoque: STATE.estoque })
-    }).catch(() => {});
+      body: JSON.stringify({ pedidos: [], estoque: STATE.estoque }),
+      signal: AbortSignal.timeout(10000)
+    });
+    if (!r0.ok) return false;
 
-    // Depois envia pedidos em lotes
-    for (let i = 0; i < pedidos.length; i += LOTE_SIZE) {
-      const lote = pedidos.slice(i, i + LOTE_SIZE);
-      await fetch(`${STATE.config.backend}/api/estado`, {
+    // Salva pedidos em lotes
+    for (let i = 0; i < pedidos.length; i += LOTE) {
+      const lote = pedidos.slice(i, i + LOTE);
+      const r = await fetch(`${STATE.config.backend}/api/estado`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ pedidos: lote, estoque: {} })
-      }).catch(e => console.warn('Lote erro:', e.message));
-      // Pequena pausa entre lotes
-      if (i + LOTE_SIZE < pedidos.length) {
-        await new Promise(r => setTimeout(r, 100));
-      }
+        body: JSON.stringify({ pedidos: lote, estoque: {} }),
+        signal: AbortSignal.timeout(10000)
+      });
+      if (!r.ok) return false;
+      if (i + LOTE < pedidos.length) await new Promise(x => setTimeout(x, 100));
     }
-    console.log(`Banco: ${pedidos.length} pedidos salvos em ${Math.ceil(pedidos.length/LOTE_SIZE)} lotes`);
-  } catch(e) { console.warn('Erro salvarBancoEmLotes:', e); }
+    return true;
+  } catch(e) {
+    console.warn('Banco:', e.message);
+    return false;
+  }
 }
 function carregarEstado() {
   try {
@@ -1630,6 +1754,8 @@ async function carregarBanco() {
     }
 
     addLog(`Banco: ${d.pedidos?.length||0} pedidos, ${Object.keys(d.estoque||{}).length} SKUs`, 'success');
+    BANCO_SYNC = true;
+    setSyncStatus('ok', `Banco: ${d.pedidos?.length||0} pedidos`);
     localStorage.setItem('grafitte_v3', JSON.stringify({pedidos:STATE.pedidos,estoque:STATE.estoque,config:STATE.config,v:'3.0'}));
     return true;
   } catch(e) {
@@ -1684,6 +1810,32 @@ function iniciarAutoSync() {
   }
 }
 
+// ============================================================
+// CHECKLIST DA SEPARAÇÃO
+// ============================================================
+function checkSep(pedidoId) {
+  // Conta todos os checkboxes do pedido
+  const checks = document.querySelectorAll(`[id^="sep-${pedidoId}-"]`);
+  const total = checks.length;
+  const marcados = [...checks].filter(c => c.checked).length;
+  const btn = document.getElementById(`btn-sep-${pedidoId}`);
+  const prog = document.getElementById(`sep-prog-${pedidoId}`);
+
+  if (btn) {
+    btn.disabled = marcados < total;
+    btn.style.opacity = marcados < total ? '.4' : '1';
+  }
+  if (prog) {
+    if (marcados === total) {
+      prog.textContent = '✓ tudo conferido!';
+      prog.style.color = 'var(--accent)';
+    } else {
+      prog.textContent = `${marcados}/${total} marcados`;
+      prog.style.color = 'var(--muted)';
+    }
+  }
+}
+
 // INIT
 const restaurado = carregarEstado();
 loadConfig();
@@ -1695,15 +1847,24 @@ if (restaurado) {
 }
 
 // Carrega do banco (fonte de verdade)
+setSyncStatus('saving', 'Conectando...');
 carregarBanco().then(ok => {
   if (ok) {
     atualizarDashboard();
     const ativos = STATE.pedidos.filter(p => !['expedido','cancelado'].includes(p.status)).length;
     document.getElementById('last-sync').textContent = `✓ Banco sincronizado — ${ativos} pedidos ativos`;
-  } else if (!restaurado) {
-    document.getElementById('last-sync').textContent = 'Nenhum dado — importe os pedidos';
+    setSyncStatus('ok', `${ativos} pedidos ativos`);
+  } else if (restaurado) {
+    const ativos = STATE.pedidos.filter(p => !['expedido','cancelado'].includes(p.status)).length;
+    document.getElementById('last-sync').textContent = `Cache local — ${ativos} pedidos (banco offline)`;
+    setSyncStatus('offline', 'Banco offline');
+    // Tenta novamente em 10 segundos
+    setTimeout(() => carregarBanco().then(ok2 => {
+      if (ok2) { atualizarDashboard(); setSyncStatus('ok', 'Reconectado!'); }
+    }), 10000);
   } else {
-    document.getElementById('last-sync').textContent = `Cache local (banco offline) — ${STATE.pedidos.filter(p=>!['expedido','cancelado'].includes(p.status)).length} ativos`;
+    document.getElementById('last-sync').textContent = 'Sem dados — importe os pedidos';
+    setSyncStatus('offline', 'Sem dados');
   }
 });
 
