@@ -1038,46 +1038,155 @@ function renderSeparacao() {
   renderPorDia(pedidos,'sep-container',busca,'sep-total',p=>{
     const pi=prazoInfo(p);
     const total=p.itens.reduce((a,i)=>a+i.qtd,0);
-
-    // Monta grupos com checklist por peça
-    const gruposHtml = (p.grupos||[]).map((g,gi) => {
-      const b = g.bordado;
-      const bordHtml = b.temBordado ? `
-        <div style="margin-top:5px;padding:5px 8px;background:rgba(167,139,250,.08);border:1px solid rgba(167,139,250,.2);border-radius:5px;font-size:10px;color:var(--purple);font-weight:600">
-          ✦ ${[b.nome,b.profissao,b.tipografia,b.cor].filter(Boolean).join(' · ')}${b.logo?' 🔰 '+b.posicaoLogo:''}
-        </div>` : '';
-      const pecasHtml = g.pecas.map((pc,pi2) => {
-        const chkId = `sep-${p.id}-${gi}-${pi2}`;
-        // Para quantidade > 1 mostra linha com ×N
-        return `<div style="display:flex;align-items:center;gap:6px;margin-top:4px">
-          <input type="checkbox" id="${chkId}" style="width:15px;height:15px;cursor:pointer;accent-color:var(--accent)" onchange="checkSep('${p.id}')">
-          <span class="sku-tag" style="color:var(--accent)">${pc.sku}</span>
-          <span style="font-size:11px;color:var(--muted)">${pc.cor||''} · ${pc.tamanho||''}</span>
-          ${pc.qtd>1?`<span style="font-size:11px;font-weight:700;color:var(--warn);background:rgba(245,158,11,.1);padding:1px 5px;border-radius:4px">×${pc.qtd}</span>`:''}
-        </div>`;
-      }).join('');
-      return `<div style="padding:6px 0;${gi>0?'border-top:1px solid var(--border);margin-top:6px;padding-top:6px':''}">
-        <div style="font-size:11px;color:var(--muted);margin-bottom:3px">${g.isKit?'📦 Kit':'👕 Individual'} · ${g.tamanho} · ${g.totalPecas} peça${g.totalPecas>1?'s':''}</div>
-        ${pecasHtml}
-        ${bordHtml}
-      </div>`;
-    }).join('');
-
-    return `<tr class="${pi.atrasado?'atrasado':''}" id="sep-row-${p.id}">
-      <td style="vertical-align:top;padding-top:12px"><span class="mono" style="color:var(--accent);cursor:pointer;font-weight:600" onclick="abrirDetalhe('${p.id}')">#${p.numero}</span></td>
-      <td style="vertical-align:top;padding-top:12px"><div style="font-weight:500">${p.cliente}</div><div class="text-sm text-muted">${p.email}</div></td>
-      <td style="vertical-align:top">${gruposHtml}</td>
-      <td style="vertical-align:top;padding-top:12px">
-        <div class="text-sm" style="font-family:var(--mono);font-weight:600">${total} peça${total>1?'s':''}</div>
-        ${p.temBordado?'<div class="badge b-bord-tag" style="margin-top:4px">✦ Bordado</div>':''}
+    const grupos=p.grupos||gerarGruposDoItens(p.itens,p.bordado);
+    const skusUnicos=[...new Set(p.itens.map(i=>i.sku))];
+    const isKit=grupos.some(g=>g.isKit);
+    return `<tr class="${pi.atrasado?'atrasado':''}" style="cursor:pointer" onclick="abrirSeparacao('${p.id}')">
+      <td><span class="mono" style="color:var(--accent);font-weight:600">#${p.numero}</span></td>
+      <td>
+        <div style="font-weight:500">${p.cliente}</div>
+        <div class="text-sm text-muted">${p.email}</div>
       </td>
-      <td style="vertical-align:top;padding-top:12px"><span class="prazo ${pi.cls}">${pi.txt}</span></td>
-      <td style="vertical-align:top;padding-top:12px">
-        <button class="btn btn-primary btn-sm" id="btn-sep-${p.id}" onclick="avancar('${p.id}')" disabled style="opacity:.4">✓ Separado</button>
-        <div style="font-size:10px;color:var(--muted);margin-top:4px;text-align:center" id="sep-prog-${p.id}">marque todos</div>
+      <td>
+        <div style="display:flex;flex-wrap:wrap;gap:3px;margin-bottom:4px">
+          ${skusUnicos.slice(0,3).map(s=>`<span class="sku-tag">${s}</span>`).join('')}
+          ${skusUnicos.length>3?`<span class="sku-tag" style="color:var(--muted)">+${skusUnicos.length-3}</span>`:''}
+        </div>
+        <div class="text-sm text-muted">${total} peça${total>1?'s':''} · ${grupos.length} grupo${grupos.length>1?'s':''}</div>
+      </td>
+      <td>
+        <div style="display:flex;flex-direction:column;gap:3px">
+          ${isKit?'<span class="badge b-kit">📦 Kit</span>':''}
+          ${p.temBordado?'<span class="badge b-bord-tag">✦ Bordado</span>':''}
+        </div>
+      </td>
+      <td><span class="prazo ${pi.cls}">${pi.txt}</span></td>
+      <td onclick="event.stopPropagation()">
+        <button class="btn btn-primary btn-sm" onclick="abrirSeparacao('${p.id}')">📋 Abrir</button>
       </td>
     </tr>`;
   });
+}
+
+function abrirSeparacao(id) {
+  const p=STATE.pedidos.find(x=>x.id===id);
+  if(!p) return;
+  const grupos=p.grupos||gerarGruposDoItens(p.itens,p.bordado);
+  const total=p.itens.reduce((a,i)=>a+(i.qtd||1),0);
+  const pi=prazoInfo(p);
+  SEP_CHECKS[id]={};
+
+  document.getElementById('mp-title').textContent=`#${p.numero} — ${p.cliente}`;
+
+  let html=`
+    <div style="display:flex;gap:16px;margin-bottom:14px;padding:12px 0;border-bottom:1px solid var(--border)">
+      <div style="flex:1">
+        <div class="form-label">Cliente</div>
+        <div style="font-weight:500">${p.cliente}</div>
+        <div class="text-sm text-muted">${p.email}</div>
+      </div>
+      <div style="text-align:center">
+        <div class="form-label">Prazo</div>
+        <span class="prazo ${pi.cls}" style="font-size:15px">${pi.txt}</span>
+      </div>
+      <div style="text-align:center">
+        <div class="form-label">Total</div>
+        <div class="mono" style="font-weight:600;font-size:15px">${total} peça${total>1?'s':''}</div>
+      </div>
+    </div>
+    <div class="alert alert-warn" style="margin-bottom:14px;font-size:12px">
+      ⚠ Marque cada peça ao separar fisicamente. O botão só ativa quando tudo estiver conferido.
+    </div>`;
+
+  // Grupos com checklist
+  grupos.forEach((g,gi) => {
+    const b=g.bordado||{};
+    const totalGrupo=g.pecas?.reduce((a,pc)=>a+(pc.qtd||1),0)||0;
+    html+=`<div style="margin-bottom:12px;border:1px solid var(--border2);border-radius:8px;overflow:hidden">
+      <div style="background:var(--bg3);padding:9px 14px;border-bottom:1px solid var(--border);display:flex;align-items:center;gap:8px">
+        <span>${g.isKit?'📦':'👕'}</span>
+        <span style="font-weight:600;font-size:13px">${g.isKit?'Kit':'Individual'}</span>
+        <span class="text-sm text-muted">· Tam ${g.tamanho||'—'} · ${totalGrupo} peça${totalGrupo>1?'s':''}</span>
+      </div>`;
+
+    if(b.temBordado) {
+      html+=`<div class="bord-card" style="margin:10px 14px;border-radius:6px">
+        <div class="bord-title">✦ Bordado</div>
+        <div class="bord-grid">
+          ${b.nome?`<div class="bord-field"><div class="bord-field-label">Nome</div><div class="bord-field-value">${b.nome}</div></div>`:''}
+          ${b.profissao?`<div class="bord-field"><div class="bord-field-label">Profissão</div><div class="bord-field-value">${b.profissao}</div></div>`:''}
+          ${b.tipografia?`<div class="bord-field"><div class="bord-field-label">Fonte</div><div class="bord-field-value">${b.tipografia}</div></div>`:''}
+          ${b.cor?`<div class="bord-field"><div class="bord-field-label">Cor letra</div><div class="bord-field-value">${b.cor}</div></div>`:''}
+          ${b.logo?`<div class="bord-logo"><div class="bord-logo-label">🔰 Brasão</div><div class="bord-logo-value">📍 ${b.posicaoLogo||'—'}</div></div>`:''}
+        </div>
+      </div>`;
+    }
+
+    (g.pecas||[]).forEach((pc,pi2) => {
+      for(let q=0;q<(pc.qtd||1);q++) {
+        const cid=`sep-${id}-${gi}-${pi2}-${q}`;
+        SEP_CHECKS[id][cid]=false;
+        html+=`<div class="chk-item" id="row-${cid}" onclick="toggleSepChk('${cid}','${id}')">
+          <div class="chk-box" id="cb-${cid}"></div>
+          <div style="flex:1">
+            <div class="mono" style="font-size:12px;color:var(--accent);font-weight:600">${pc.sku}</div>
+            <div class="text-sm text-muted" style="margin-top:2px">${pc.cor||'—'} · Tam ${pc.tamanho||'—'}${pc.qtd>1?' · Und '+(q+1)+'/'+pc.qtd:''}</div>
+          </div>
+        </div>`;
+      }
+    });
+    html+=`</div>`;
+  });
+
+  html+=`<div class="chk-progress" style="margin-top:4px">
+    <span id="sep-prog-${id}" style="color:var(--muted);font-size:12px">0 / ${total} conferidos</span>
+    <div class="chk-bar"><div class="chk-fill" id="sep-fill-${id}" style="width:0%"></div></div>
+    <span id="sep-pct-${id}" style="color:var(--muted);font-size:12px">0%</span>
+  </div>`;
+
+  document.getElementById('mp-body').innerHTML=html;
+
+  const btn=document.getElementById('mp-btn');
+  btn.style.display='';
+  btn.textContent='✓ Confirmar separação';
+  btn.className='btn btn-primary';
+  btn.disabled=true;
+  btn.style.opacity='.4';
+  btn.onclick=()=>{ closeModal('modal-ped'); avancar(id); };
+  openModal('modal-ped');
+}
+
+// Estado dos checks de separação
+const SEP_CHECKS = {};
+
+function toggleSepChk(cid, pedidoId) {
+  if(!SEP_CHECKS[pedidoId]) SEP_CHECKS[pedidoId]={};
+  SEP_CHECKS[pedidoId][cid]=!SEP_CHECKS[pedidoId][cid];
+  const checked=SEP_CHECKS[pedidoId][cid];
+  const cb=document.getElementById('cb-'+cid);
+  const row=document.getElementById('row-'+cid);
+  if(cb){cb.className='chk-box'+(checked?' checked':'');cb.textContent=checked?'✓':'';}
+  if(row) row.className='chk-item'+(checked?' checked':'');
+
+  const total=Object.keys(SEP_CHECKS[pedidoId]).length;
+  const done=Object.values(SEP_CHECKS[pedidoId]).filter(Boolean).length;
+  const pct=Math.round(done/total*100);
+
+  const progEl=document.getElementById('sep-prog-'+pedidoId);
+  const fillEl=document.getElementById('sep-fill-'+pedidoId);
+  const pctEl=document.getElementById('sep-pct-'+pedidoId);
+  const btn=document.getElementById('mp-btn');
+
+  if(progEl) progEl.textContent=`${done} / ${total} conferidos`;
+  if(fillEl) fillEl.style.width=pct+'%';
+  if(pctEl){pctEl.textContent=pct+'%';pctEl.style.color=pct===100?'var(--accent)':'var(--muted)';}
+  if(btn){
+    const tudo=done===total;
+    btn.disabled=!tudo;
+    btn.style.opacity=tudo?'1':'.4';
+    btn.textContent=tudo?'✓ Tudo conferido — Separar!':'✓ Confirmar separação';
+    btn.style.background=tudo?'var(--accent2)':'';
+  }
 }
 
 function renderBordado() {
@@ -1723,45 +1832,78 @@ function carregarEstado() {
 }
 async function carregarBanco() {
   try {
-    const res = await fetch(`${STATE.config.backend}/api/estado`, { signal: AbortSignal.timeout(15000) });
-    if (!res.ok) { console.warn('Banco HTTP error:', res.status); return false; }
+    setSyncStatus('saving', 'Carregando banco...');
+    const res = await fetch(`${STATE.config.backend}/api/estado`, { signal: AbortSignal.timeout(20000) });
+    if (!res.ok) { console.warn('Banco HTTP:', res.status); setSyncStatus('error', 'Erro banco'); return false; }
     const d = await res.json();
-    if (!d.sucesso) return false;
+    if (!d.sucesso) { setSyncStatus('error', 'Banco falhou'); return false; }
+
+    const parseJSON = (v, def) => {
+      if (!v) return def;
+      if (typeof v === 'string') { try { return JSON.parse(v); } catch(e) { return def; } }
+      return v;
+    };
 
     if (d.pedidos?.length > 0) {
-      STATE.pedidos = d.pedidos.map(p => ({
-        ...p,
-        createdAt: new Date(p.createdAt),
-        // Garante que itens e bordado são arrays/objetos corretos
-        itens: Array.isArray(p.itens) ? p.itens : (typeof p.itens === 'string' ? JSON.parse(p.itens) : []),
-        bordado: typeof p.bordado === 'string' ? JSON.parse(p.bordado) : (p.bordado || {temBordado:false}),
-        entrega: typeof p.entrega === 'string' ? JSON.parse(p.entrega) : (p.entrega || {}),
-        etapas: typeof p.etapas === 'string' ? JSON.parse(p.etapas) : (p.etapas || {}),
-        prazoMaxDias: p.prazoMaxDias || (p.bordado?.temBordado ? STATE.config.prazo+2 : STATE.config.prazo)
-      }));
+      STATE.pedidos = d.pedidos.map(p => {
+        const itens = parseJSON(p.itens, []);
+        const bordado = parseJSON(p.bordado, {temBordado:false});
+        const etapas = parseJSON(p.etapas, {});
+        const entrega = parseJSON(p.entrega, {});
+        const grupos = parseJSON(p.grupos, null);
+        return {
+          ...p,
+          createdAt: new Date(p.createdAt),
+          itens,
+          bordado,
+          etapas,
+          entrega,
+          grupos: grupos || gerarGruposDoItens(itens, bordado),
+          temBordado: bordado?.temBordado || itens.some(i => i.grupoBordado?.temBordado),
+          prazoMaxDias: p.prazoMaxDias || (bordado?.temBordado ? STATE.config.prazo+2 : STATE.config.prazo)
+        };
+      });
     }
 
     if (Object.keys(d.estoque||{}).length > 0) {
-      // Garante que entradas/saidas são arrays
       Object.entries(d.estoque).forEach(([sku, e]) => {
-        d.estoque[sku] = {
-          ...e,
-          entradas: Array.isArray(e.entradas) ? e.entradas : [],
-          saidas: Array.isArray(e.saidas) ? e.saidas : []
-        };
+        d.estoque[sku] = { ...e, entradas: e.entradas||[], saidas: e.saidas||[] };
       });
       STATE.estoque = d.estoque;
     }
 
-    addLog(`Banco: ${d.pedidos?.length||0} pedidos, ${Object.keys(d.estoque||{}).length} SKUs`, 'success');
+    const ativos = STATE.pedidos.filter(p => !['expedido','cancelado'].includes(p.status)).length;
+    addLog(`Banco: ${d.pedidos?.length||0} pedidos (${ativos} ativos)`, 'success');
     BANCO_SYNC = true;
-    setSyncStatus('ok', `Banco: ${d.pedidos?.length||0} pedidos`);
+    setSyncStatus('ok', `${ativos} pedidos ativos`);
+    // Salva cache local atualizado
     localStorage.setItem('grafitte_v3', JSON.stringify({pedidos:STATE.pedidos,estoque:STATE.estoque,config:STATE.config,v:'3.0'}));
     return true;
   } catch(e) {
     console.warn('Banco indisponível:', e.message);
+    setSyncStatus('offline', 'Banco offline');
     return false;
   }
+}
+
+// Reconstrói grupos a partir de itens flat (para pedidos antigos sem grupos)
+function gerarGruposDoItens(itens, bordado) {
+  if (!itens?.length) return [];
+  const kitMap = {};
+  const grupos = [];
+  itens.forEach((item, idx) => {
+    if (item.deKit) {
+      if (!kitMap[item.deKit]) {
+        kitMap[item.deKit] = { itemIdx: idx, titulo: item.deKit, isKit: true, tamanho: item.tamanho, bordado: item.grupoBordado || bordado || {temBordado:false}, pecas: [] };
+        grupos.push(kitMap[item.deKit]);
+      }
+      kitMap[item.deKit].pecas.push(item);
+    } else {
+      grupos.push({ itemIdx: idx, titulo: item.nome, isKit: false, tamanho: item.tamanho, bordado: item.grupoBordado || {temBordado:false}, pecas: [item], totalPecas: item.qtd });
+    }
+  });
+  grupos.forEach(g => { if (!g.totalPecas) g.totalPecas = g.pecas.reduce((a,p) => a+p.qtd, 0); });
+  return grupos;
 }
 
 // ============================================================
@@ -1814,26 +1956,17 @@ function iniciarAutoSync() {
 // CHECKLIST DA SEPARAÇÃO
 // ============================================================
 function checkSep(pedidoId) {
-  // Conta todos os checkboxes do pedido
   const checks = document.querySelectorAll(`[id^="sep-${pedidoId}-"]`);
   const total = checks.length;
   const marcados = [...checks].filter(c => c.checked).length;
-  const btn = document.getElementById(`btn-sep-${pedidoId}`);
   const prog = document.getElementById(`sep-prog-${pedidoId}`);
-
-  if (btn) {
-    btn.disabled = marcados < total;
-    btn.style.opacity = marcados < total ? '.4' : '1';
-  }
+  const btn = document.getElementById(`btn-sep-${pedidoId}`);
   if (prog) {
-    if (marcados === total) {
-      prog.textContent = '✓ tudo conferido!';
-      prog.style.color = 'var(--accent)';
-    } else {
-      prog.textContent = `${marcados}/${total} marcados`;
-      prog.style.color = 'var(--muted)';
-    }
+    prog.textContent = marcados === total ? '✓ tudo conferido!' : `${marcados}/${total} marcados`;
+    prog.style.color = marcados === total ? 'var(--accent)' : 'var(--muted)';
   }
+  // Destaca o botão quando tudo marcado
+  if (btn) btn.style.background = marcados === total ? 'var(--accent2)' : '';
 }
 
 // INIT
