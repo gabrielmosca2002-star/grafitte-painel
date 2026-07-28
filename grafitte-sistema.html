@@ -608,17 +608,60 @@ function parseComp(str) {
 }
 
 function parseBordado(items) {
-  const b={temBordado:false,nome:'',profissao:'',tipografia:'',cor:'',logo:'',posicaoLogo:''};
-  items.forEach(i=>{
-    const l=i.label.toLowerCase(); const v=i.valor.trim();
-    if(!v) return;
-    if((l.includes('bordado')&&l.includes('nome'))||l.includes('bordado (nome)')) {b.nome=v;b.temBordado=true;}
-    else if(l.includes('profiss')&&!v.toLowerCase().includes('ficar')) {b.profissao=v;b.temBordado=true;}
-    else if(l.includes('tipografia')) b.tipografia=v.replace(/^\s*/,'');
-    else if(l.includes('cor da letr')) b.cor=v.replace(/^\s*/,'');
-    else if(l.includes('bras')&&l.includes('curso')) {b.logo='Sim';b.temBordado=true;}
-    else if(l.includes('posi')&&l.includes('bras')) b.posicaoLogo=v.replace(/^\s*/,'');
+  const b = {
+    temBordado: false,
+    nome: '',
+    profissao: '',
+    tipografia: '',
+    cor: '',
+    logo: '',
+    posicaoLogo: '',
+    posicaoBordado: ''
+  };
+
+  items.forEach(i => {
+    const l = i.label.toLowerCase().replace(/\s+/g,' ').trim();
+    const v = i.valor.trim();
+
+    // Nome — "Bordado (Nome) - X" ou "Bordado do Nome Grátis - X"
+    if ((l.includes('bordado') && (l.includes('(nome)') || l.includes('do nome'))) ||
+        l.startsWith('bordado (nome)')) {
+      if (v && !v.toLowerCase().includes('ficará') && !v.toLowerCase().includes('ficara')) {
+        b.nome = v; b.temBordado = true;
+      }
+    }
+    // Profissão — "PROFISSÃO (*Ficará abaixo...) - X" ou "Bordado Profissão - X"
+    else if (l.includes('profiss') || l.includes('profiss')) {
+      if (v && !v.toLowerCase().includes('ficará') && !v.toLowerCase().includes('ficara') &&
+          !v.toLowerCase().includes('abaixo') && v.length > 1) {
+        b.profissao = v; b.temBordado = true;
+      }
+    }
+    // Tipografia / Fonte
+    else if (l.includes('tipografia') || l.includes('fonte')) {
+      if (v) b.tipografia = v;
+    }
+    // Cor da letra
+    else if (l.includes('cor da letr') || l.includes('cor letra')) {
+      if (v) b.cor = v;
+    }
+    // Brasão / Logo
+    else if (l.includes('bras') && (l.includes('curso') || l.includes('profiss'))) {
+      if (v && v.toLowerCase() !== 'não' && v !== '' && v !== '-') {
+        b.logo = v.toLowerCase() === 'sim' ? 'Sim' : v;
+        b.temBordado = true;
+      }
+    }
+    // Posição do bordado / brasão
+    else if (l.includes('posi') && (l.includes('bras') || l.includes('bordado'))) {
+      if (v) b.posicaoLogo = v;
+    }
+    // Posição do nome/bordado geral
+    else if (l.includes('posi') && !b.posicaoLogo) {
+      if (v) b.posicaoBordado = v;
+    }
   });
+
   return b;
 }
 
@@ -1110,16 +1153,7 @@ function abrirSeparacao(id) {
       </div>`;
 
     if(b.temBordado) {
-      html+=`<div class="bord-card" style="margin:10px 14px;border-radius:6px">
-        <div class="bord-title">✦ Bordado</div>
-        <div class="bord-grid">
-          ${b.nome?`<div class="bord-field"><div class="bord-field-label">Nome</div><div class="bord-field-value">${b.nome}</div></div>`:''}
-          ${b.profissao?`<div class="bord-field"><div class="bord-field-label">Profissão</div><div class="bord-field-value">${b.profissao}</div></div>`:''}
-          ${b.tipografia?`<div class="bord-field"><div class="bord-field-label">Fonte</div><div class="bord-field-value">${b.tipografia}</div></div>`:''}
-          ${b.cor?`<div class="bord-field"><div class="bord-field-label">Cor letra</div><div class="bord-field-value">${b.cor}</div></div>`:''}
-          ${b.logo?`<div class="bord-logo"><div class="bord-logo-label">🔰 Brasão</div><div class="bord-logo-value">📍 ${b.posicaoLogo||'—'}</div></div>`:''}
-        </div>
-      </div>`;
+      html += `<div style="margin:10px 14px">${renderBordadoCard(b)}</div>`;
     }
 
     (g.pecas||[]).forEach((pc,pi2) => {
@@ -1598,17 +1632,22 @@ function abrirDetalhe(id) {
 
   document.getElementById('mp-title').textContent=`Pedido #${p.numero} — ${p.cliente}`;
 
-  let bordHtml='';
-  if(b.temBordado) bordHtml=`<div class="bord-card" style="margin-bottom:16px">
-    <div class="bord-title">✦ Personalização — Bordado</div>
-    <div class="bord-grid">
-      ${b.nome?`<div class="bord-field"><div class="bord-field-label">Nome</div><div class="bord-field-value">${b.nome}</div></div>`:''}
-      ${b.profissao?`<div class="bord-field"><div class="bord-field-label">Profissão</div><div class="bord-field-value">${b.profissao}</div></div>`:''}
-      ${b.tipografia?`<div class="bord-field"><div class="bord-field-label">Tipografia</div><div class="bord-field-value">${b.tipografia}</div></div>`:''}
-      ${b.cor?`<div class="bord-field"><div class="bord-field-label">Cor da letra</div><div class="bord-field-value">${b.cor}</div></div>`:''}
-      ${b.logo?`<div class="bord-logo" style="min-width:140px"><div class="bord-logo-label">🔰 Logo / Brasão</div><div class="bord-logo-value">📍 ${b.posicaoLogo||'—'}</div></div>`:''}
-    </div>
-  </div>`;
+  // Mostra bordado de cada grupo se houver múltiplos
+  let bordHtml = '';
+  const gruposComBordado = (p.grupos||[]).filter(g => g.bordado?.temBordado);
+  if (gruposComBordado.length > 1) {
+    // Múltiplos bordados — mostra cada um separado
+    bordHtml = gruposComBordado.map((g,gi) => {
+      const pecasResume = g.pecas?.slice(0,2).map(pc=>`<span class="sku-tag">${pc.sku}</span>`).join('') || '';
+      return `<div style="margin-bottom:10px">
+        <div style="margin-bottom:6px;display:flex;gap:4px;flex-wrap:wrap">${pecasResume}${g.pecas?.length>2?`<span class="sku-tag text-muted">+${g.pecas.length-2}</span>`:''}</div>
+        ${renderBordadoCard(g.bordado, `✦ Bordado ${gi+1}`)}
+      </div>`;
+    }).join('');
+    bordHtml = `<div style="margin-bottom:16px">${bordHtml}</div>`;
+  } else if (b.temBordado) {
+    bordHtml = `<div style="margin-bottom:16px">${renderBordadoCard(b, '✦ Personalização — Bordado')}</div>`;
+  }
 
   document.getElementById('mp-body').innerHTML=`
     <div class="grid2" style="margin-bottom:16px">
@@ -1647,6 +1686,25 @@ function abrirDetalhe(id) {
   } else btn.style.display='none';
 
   openModal('modal-ped');
+}
+
+// ============================================================
+// BORDADO HTML HELPER
+// ============================================================
+function renderBordadoCard(b, titulo='✦ Bordado') {
+  if (!b || !b.temBordado) return '';
+  const posicao = b.posicaoLogo || b.posicaoBordado || '';
+  return `<div class="bord-card">
+    <div class="bord-title">${titulo}</div>
+    <div class="bord-grid">
+      ${b.nome ? `<div class="bord-field"><div class="bord-field-label">Nome</div><div class="bord-field-value">${b.nome}</div></div>` : ''}
+      ${b.profissao ? `<div class="bord-field"><div class="bord-field-label">Profissão</div><div class="bord-field-value">${b.profissao}</div></div>` : ''}
+      ${b.tipografia ? `<div class="bord-field"><div class="bord-field-label">Tipografia</div><div class="bord-field-value">${b.tipografia}</div></div>` : ''}
+      ${b.cor ? `<div class="bord-field"><div class="bord-field-label">Cor da letra</div><div class="bord-field-value">${b.cor}</div></div>` : ''}
+      ${b.logo && b.logo !== '-' ? `<div class="bord-logo"><div class="bord-logo-label">🔰 Brasão / Logo</div><div class="bord-logo-value">${b.logo}</div></div>` : ''}
+      ${posicao ? `<div class="bord-logo"><div class="bord-logo-label">📍 Posição</div><div class="bord-logo-value">${posicao}</div></div>` : ''}
+    </div>
+  </div>`;
 }
 
 // ============================================================
