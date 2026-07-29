@@ -222,6 +222,7 @@ body{background:var(--bg);color:var(--text);font-family:var(--font);font-size:14
     </div>
     <div class="topbar-right">
       <button class="btn btn-ghost btn-sm" onclick="importarHistorico()" id="btn-hist">📚 Histórico (PCP)</button>
+      <button class="btn btn-ghost btn-sm" onclick="reprocessarBordados()" id="btn-rebord" title="Reprocessa bordados de todos os pedidos ativos">✦ Fix bordados</button>
       <button class="btn btn-ghost btn-sm" onclick="sincronizar()" id="btn-sync">⟳ Sincronizar</button>
       <button class="btn btn-primary" onclick="importarPedidos()" id="btn-import">↻ Importar pedidos</button>
     </div>
@@ -2073,6 +2074,65 @@ function gerarGruposDoItens(itens, bordado) {
 // ============================================================
 // SINCRONIZAR COM BANCO
 // ============================================================
+// Reprocessa bordados de todos os pedidos ativos buscando da Shoppub
+async function reprocessarBordados() {
+  const btn = document.getElementById('btn-rebord');
+  btn.disabled = true;
+  btn.innerHTML = '<span class="spinner"></span> Corrigindo...';
+  addLog('Reprocessando bordados...', 'info');
+
+  try {
+    // Busca pedidos ativos dos últimos 60 dias com complementos completos
+    const res = await fetch(`${STATE.config.backend}/api/pedidos`);
+    if (!res.ok) throw new Error('Servidor indisponível');
+    const data = await res.json();
+    if (!data.sucesso) throw new Error('Erro ao buscar pedidos');
+
+    let corrigidos = 0;
+
+    data.pedidos.forEach(rawPedido => {
+      const id = String(rawPedido.id);
+      const existente = STATE.pedidos.find(p => p.id === id);
+      if (!existente) return;
+
+      // Reprocessa pedido completo com parser novo
+      const reprocessado = processarPedido(rawPedido);
+      if (!reprocessado) return;
+
+      // Atualiza APENAS bordado e grupos — mantém etapas e status intactos
+      existente.grupos = reprocessado.grupos;
+      existente.bordado = reprocessado.bordado;
+      existente.temBordado = reprocessado.temBordado;
+
+      // Se tinha bordado mas etapas não refletia isso, corrige
+      if (reprocessado.temBordado && existente.etapas.bordado === null) {
+        existente.etapas.bordado = false;
+      }
+
+      // Se status do site mudou para expedido
+      if ([3,4,5,8,9].includes(rawPedido.status) && existente.status !== 'expedido') {
+        existente.status = 'expedido';
+        existente.statusSite = rawPedido.status;
+      }
+
+      corrigidos++;
+    });
+
+    addLog(`✓ ${corrigidos} pedidos reprocessados`, 'success');
+    atualizarDashboard();
+    renderPaginaAtiva();
+    await salvarEstado();
+    showAlert('success', `✓ ${corrigidos} pedidos com bordados corrigidos!`);
+
+  } catch(e) {
+    addLog('Erro: ' + e.message, 'error');
+    showAlert('danger', 'Erro: ' + e.message);
+  }
+
+  btn.disabled = false;
+  btn.innerHTML = '✦ Fix bordados';
+}
+
 async function sincronizar() {
   const btn = document.getElementById('btn-sync');
   btn.disabled = true;
