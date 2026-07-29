@@ -1943,7 +1943,16 @@ async function carregarBanco() {
         const bordado = parseJSON(p.bordado, {temBordado:false});
         const etapas = parseJSON(p.etapas, {});
         const entrega = parseJSON(p.entrega, {});
-        const grupos = parseJSON(p.grupos, null);
+        const gruposSalvos = parseJSON(p.grupos, null);
+        // Sempre reconstrói grupos com bordado geral como fallback
+        const grupos = gruposSalvos || gerarGruposDoItens(itens, bordado);
+        // Garante que grupos sem bordado próprio herdam o bordado geral
+        grupos.forEach(g => {
+          if (!g.bordado?.temBordado && bordado?.temBordado) {
+            g.bordado = bordado;
+          }
+        });
+        const temBordado = bordado?.temBordado || grupos.some(g => g.bordado?.temBordado);
         return {
           ...p,
           createdAt: new Date(p.createdAt),
@@ -1951,9 +1960,9 @@ async function carregarBanco() {
           bordado,
           etapas,
           entrega,
-          grupos: grupos || gerarGruposDoItens(itens, bordado),
-          temBordado: bordado?.temBordado || itens.some(i => i.grupoBordado?.temBordado),
-          prazoMaxDias: p.prazoMaxDias || (bordado?.temBordado ? STATE.config.prazo+2 : STATE.config.prazo)
+          grupos,
+          temBordado,
+          prazoMaxDias: p.prazoMaxDias || (temBordado ? STATE.config.prazo+2 : STATE.config.prazo)
         };
       });
     }
@@ -2000,18 +2009,38 @@ function gerarGruposDoItens(itens, bordado) {
   if (!itens?.length) return [];
   const kitMap = {};
   const grupos = [];
+  // bordado geral do pedido (fallback quando item não tem bordado próprio)
+  const bordadoGeral = bordado?.temBordado ? bordado : {temBordado:false};
+
   itens.forEach((item, idx) => {
+    // Bordado do item: usa grupoBordado se tiver, senão usa bordado geral
+    const bordadoItem = (item.grupoBordado?.temBordado ? item.grupoBordado : null) || bordadoGeral;
+
     if (item.deKit) {
       if (!kitMap[item.deKit]) {
-        kitMap[item.deKit] = { itemIdx: idx, titulo: item.deKit, isKit: true, tamanho: item.tamanho, bordado: item.grupoBordado || bordado || {temBordado:false}, pecas: [] };
+        kitMap[item.deKit] = {
+          itemIdx: idx, titulo: item.deKit, isKit: true,
+          tamanho: item.tamanho,
+          bordado: bordadoItem,
+          pecas: []
+        };
         grupos.push(kitMap[item.deKit]);
       }
       kitMap[item.deKit].pecas.push(item);
     } else {
-      grupos.push({ itemIdx: idx, titulo: item.nome, isKit: false, tamanho: item.tamanho, bordado: item.grupoBordado || {temBordado:false}, pecas: [item], totalPecas: item.qtd });
+      grupos.push({
+        itemIdx: idx, titulo: item.nome, isKit: false,
+        tamanho: item.tamanho,
+        bordado: bordadoItem,  // usa bordado geral se item não tem próprio
+        pecas: [item],
+        totalPecas: item.qtd || 1
+      });
     }
   });
-  grupos.forEach(g => { if (!g.totalPecas) g.totalPecas = g.pecas.reduce((a,p) => a+p.qtd, 0); });
+
+  grupos.forEach(g => {
+    if (!g.totalPecas) g.totalPecas = g.pecas.reduce((a,p) => a+(p.qtd||1), 0);
+  });
   return grupos;
 }
 
