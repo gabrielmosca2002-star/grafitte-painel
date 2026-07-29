@@ -508,11 +508,11 @@ const FERIADOS = ['2025-01-01','2025-04-18','2025-04-21','2025-05-01','2025-09-0
 
 // Mapa status site → etapa interna
 const STATUS_MAP = {
-  0:'separacao', 1:'separacao', 6:'separacao', 7:'separacao', 9:'separacao',
+  0:'separacao', 1:'separacao', 6:'separacao', 7:'separacao',
   10:'separacao', 11:'separacao', 14:'separacao', 15:'separacao',
   13:'bordado',
   12:'embalagem',
-  3:'expedido', 4:'expedido', 5:'expedido', 8:'expedido',
+  3:'expedido', 4:'expedido', 5:'expedido', 8:'expedido', 9:'expedido',
   2:'cancelado', 16:'cancelado', 17:'cancelado', 18:'cancelado'
 };
 
@@ -628,15 +628,18 @@ function parseBordado(items) {
     // Nome — "Bordado (Nome) - X" ou "Bordado do Nome Grátis - X"
     if ((l.includes('bordado') && (l.includes('(nome)') || l.includes('do nome'))) ||
         l.startsWith('bordado (nome)')) {
-      if (v && !v.toLowerCase().includes('ficará') && !v.toLowerCase().includes('ficara')) {
-        b.nome = v; b.temBordado = true;
+      // Remove preço do valor: "Fulano (+ R$14,90)" → "Fulano"
+      const vNome = v.replace(/\(\+\s*R\$[\d.,]+\)/g, '').trim();
+      if (vNome && !vNome.toLowerCase().includes('ficará') && !vNome.toLowerCase().includes('ficara')) {
+        b.nome = vNome; b.temBordado = true;
       }
     }
-    // Profissão — "PROFISSÃO (*Ficará abaixo...) - X" ou "Bordado Profissão - X"
-    else if (l.includes('profiss') || l.includes('profiss')) {
-      if (v && !v.toLowerCase().includes('ficará') && !v.toLowerCase().includes('ficara') &&
-          !v.toLowerCase().includes('abaixo') && v.length > 1) {
-        b.profissao = v; b.temBordado = true;
+    // Profissão
+    else if (l.includes('profiss')) {
+      const vProf = v.replace(/\(\+\s*R\$[\d.,]+\)/g, '').trim();
+      if (vProf && !vProf.toLowerCase().includes('ficará') && !vProf.toLowerCase().includes('ficara') &&
+          !vProf.toLowerCase().includes('abaixo') && vProf.length > 1) {
+        b.profissao = vProf; b.temBordado = true;
       }
     }
     // Tipografia / Fonte
@@ -647,10 +650,14 @@ function parseBordado(items) {
     else if (l.includes('cor da letr') || l.includes('cor letra')) {
       if (v) b.cor = v;
     }
-    // Brasão / Logo
+    // Brasão — "Bordado do brasão do seu curso ou profissão - Enfermeira"
+    // O valor pode ser: "Sim", nome da profissão/curso, ou vazio
     else if (l.includes('bras') && (l.includes('curso') || l.includes('profiss'))) {
-      if (v && v.toLowerCase() !== 'não' && v !== '' && v !== '-') {
-        b.logo = v.toLowerCase() === 'sim' ? 'Sim' : v;
+      // Limpa o valor: remove preço "(+ R$39,90)" e texto extra
+      const vLimpo = v.replace(/\(\+\s*R\$[\d.,]+\)/g, '').trim();
+      const naoTemBrasao = ['não','nao','','–','—','-','false','0'].includes(vLimpo.toLowerCase());
+      if (vLimpo && !naoTemBrasao) {
+        b.logo = vLimpo;
         b.temBordado = true;
       }
     }
@@ -663,6 +670,15 @@ function parseBordado(items) {
       if (v) b.posicaoBordado = v;
     }
   });
+
+  // Se tem posição do brasão mas logo não foi detectado, marca como Sim
+  if (b.posicaoLogo && !b.logo) {
+    b.logo = 'Sim';
+    b.temBordado = true;
+  }
+
+  // Se tem nome ou profissão mas temBordado ainda falso, corrige
+  if (b.nome || b.profissao) b.temBordado = true;
 
   return b;
 }
@@ -1737,7 +1753,7 @@ function renderBordadoCard(b, titulo='✦ Bordado') {
       ${b.profissao ? `<div class="bord-field"><div class="bord-field-label">Profissão</div><div class="bord-field-value">${b.profissao}</div></div>` : ''}
       ${b.tipografia ? `<div class="bord-field"><div class="bord-field-label">Tipografia</div><div class="bord-field-value">${b.tipografia}</div></div>` : ''}
       ${b.cor ? `<div class="bord-field"><div class="bord-field-label">Cor da letra</div><div class="bord-field-value">${b.cor}</div></div>` : ''}
-      ${b.logo && b.logo !== '-' ? `<div class="bord-logo"><div class="bord-logo-label">🔰 Brasão / Logo</div><div class="bord-logo-value">${b.logo}</div></div>` : ''}
+      ${b.logo && b.logo !== '-' ? `<div class="bord-logo"><div class="bord-logo-label">🔰 Brasão</div><div class="bord-logo-value">${b.logo}</div></div>` : ''}
       ${posicao ? `<div class="bord-logo"><div class="bord-logo-label">📍 Posição</div><div class="bord-logo-value">${posicao}</div></div>` : ''}
     </div>
   </div>`;
@@ -2084,7 +2100,7 @@ async function verificarStatusAtivos() {
     if (!ativos.length) return;
 
     // Pega os IDs dos pedidos ativos
-    const ids = ativos.map(p => p.numeroCompleto || p.id).slice(0, 50);
+    const ids = ativos.map(p => String(p.id)).slice(0, 50);
 
     const res = await fetch(`${STATE.config.backend}/api/pedidos/status-check`, {
       method: 'POST',
@@ -2100,21 +2116,18 @@ async function verificarStatusAtivos() {
     let atualizados = 0;
     data.pedidos.forEach(sitePedido => {
       const statusSite = sitePedido.status || sitePedido.status_resumido || 0;
-      const interno = STATE.pedidos.find(p =>
-        String(p.id) === String(sitePedido.id) ||
-        p.numeroCompleto === sitePedido.shoppub_id
-      );
+      const interno = STATE.pedidos.find(p => String(p.id) === String(sitePedido.id));
       if (!interno) return;
 
       // Atualiza status do site
       interno.statusSite = statusSite;
       interno.statusSiteLabel = {
         3:'Entregue', 4:'Despachado', 5:'NF Emitida', 8:'Despachado',
-        2:'Cancelado', 12:'Preparando Envio', 13:'Em Customização'
-      }[statusSite] || String(statusSite);
+        9:'Troca/Devolução', 2:'Cancelado', 12:'Preparando Envio', 13:'Em Customização'
+      }[statusSite] || `Status ${statusSite}`;
 
-      // Se o site diz despachado/entregue → move para expedido
-      if ([3, 4, 5, 8].includes(statusSite) && interno.status !== 'expedido') {
+      // Se o site diz despachado/entregue/troca → move para expedido (saiu da produção)
+      if ([3, 4, 5, 8, 9].includes(statusSite) && interno.status !== 'expedido') {
         interno.status = 'expedido';
         addLog(`#${interno.numero} → expedido (site: ${interno.statusSiteLabel})`, 'info');
         atualizados++;
