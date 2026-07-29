@@ -2051,42 +2051,50 @@ async function sincronizar() {
   const btn = document.getElementById('btn-sync');
   btn.disabled = true;
   btn.innerHTML = '<span class="spinner"></span> Sincronizando...';
-
-  try {
-    const ok = await carregarBanco();
-    if (ok) {
-      atualizarDashboard();
-      renderPaginaAtiva();
-      const ativos = STATE.pedidos.filter(p => !['expedido','cancelado'].includes(p.status)).length;
-      document.getElementById('last-sync').textContent = `✓ Sincronizado às ${new Date().toLocaleTimeString('pt-BR')} — ${ativos} pedidos ativos`;
-      addLog('✓ Sincronizado com banco', 'success');
-    } else {
-      addLog('Banco indisponível', 'warn');
-    }
-  } catch(e) {
-    addLog('Erro ao sincronizar: ' + e.message, 'error');
-  }
-
+  await autoSyncCompleto();
   btn.disabled = false;
   btn.innerHTML = '⟳ Sincronizar';
 }
 
-// AUTO-SYNC melhorado — sincroniza com banco a cada X minutos
+// AUTO-SYNC — roda a cada X minutos automaticamente
 function iniciarAutoSync() {
   if (autoSyncTimer) clearInterval(autoSyncTimer);
   if (STATE.config.autoSync > 0) {
     autoSyncTimer = setInterval(async () => {
-      addLog(`Auto-sync...`, 'info');
-      // Importa novos pedidos da Shoppub
-      await importarPedidos();
-      // Sincroniza estado do banco (etapas, estoque)
-      const ok = await carregarBanco();
-      if (ok) {
-        atualizarDashboard();
-        renderPaginaAtiva();
-      }
+      await autoSyncCompleto();
     }, STATE.config.autoSync * 60 * 1000);
     addLog(`Auto-sync ativo: a cada ${STATE.config.autoSync} min`, 'info');
+  }
+}
+
+async function autoSyncCompleto() {
+  try {
+    setSyncStatus('saving', 'Sincronizando...');
+
+    // 1. Importa pedidos novos e verifica status do site
+    const res = await fetch(`${STATE.config.backend}/api/pedidos`);
+    if (res.ok) {
+      const data = await res.json();
+      if (data.sucesso && data.pedidos?.length > 0) {
+        const {novos, atualizados} = importarLista(data.pedidos);
+        if (novos > 0 || atualizados > 0) {
+          addLog(`Sync: ${novos} novos, ${atualizados} atualizados`, 'info');
+        }
+      }
+    }
+
+    // 2. Salva etapas atuais no banco
+    await salvarBanco();
+
+    // 3. Atualiza tela
+    atualizarDashboard();
+    renderPaginaAtiva();
+    setSyncStatus('ok', `Sync ${new Date().toLocaleTimeString('pt-BR',{hour:'2-digit',minute:'2-digit'})}`);
+    document.getElementById('last-sync').textContent = `Sync automático: ${new Date().toLocaleTimeString('pt-BR')}`;
+
+  } catch(e) {
+    setSyncStatus('error', 'Erro no sync');
+    console.warn('Auto-sync erro:', e);
   }
 }
 
