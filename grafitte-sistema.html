@@ -2083,7 +2083,7 @@ async function reprocessarBordados() {
 
   try {
     // Busca pedidos ativos dos últimos 60 dias com complementos completos
-    const res = await fetch(`${STATE.config.backend}/api/pedidos`);
+    const res = await fetch(`${STATE.config.backend}/api/pedidos?dias=120`);
     if (!res.ok) throw new Error('Servidor indisponível');
     const data = await res.json();
     if (!data.sucesso) throw new Error('Erro ao buscar pedidos');
@@ -2219,7 +2219,7 @@ async function autoSyncCompleto() {
     await verificarStatusAtivos();
 
     // 2. Importa pedidos novos
-    const res = await fetch(`${STATE.config.backend}/api/pedidos`);
+    const res = await fetch(`${STATE.config.backend}/api/pedidos?dias=60`);
     if (res.ok) {
       const data = await res.json();
       if (data.sucesso && data.pedidos?.length > 0) {
