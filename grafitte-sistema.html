@@ -2115,7 +2115,8 @@ async function verificarStatusAtivos() {
 
     let atualizados = 0;
     data.pedidos.forEach(sitePedido => {
-      const statusSite = sitePedido.status || sitePedido.status_resumido || 0;
+      // Força número para evitar problemas de tipo
+      const statusSite = parseInt(sitePedido.status || sitePedido.status_resumido || 0);
       const interno = STATE.pedidos.find(p => String(p.id) === String(sitePedido.id));
       if (!interno) return;
 
@@ -2126,10 +2127,10 @@ async function verificarStatusAtivos() {
         9:'Troca/Devolução', 2:'Cancelado', 12:'Preparando Envio', 13:'Em Customização'
       }[statusSite] || `Status ${statusSite}`;
 
-      // Se o site diz despachado/entregue/troca → move para expedido (saiu da produção)
+      // Se o site diz despachado/entregue/troca → move para expedido
       if ([3, 4, 5, 8, 9].includes(statusSite) && interno.status !== 'expedido') {
         interno.status = 'expedido';
-        addLog(`#${interno.numero} → expedido (site: ${interno.statusSiteLabel})`, 'info');
+        addLog(`#${interno.numero} → expedido (${interno.statusSiteLabel})`, 'info');
         atualizados++;
       } else if (statusSite === 2 && interno.status !== 'cancelado') {
         interno.status = 'cancelado';
@@ -2137,11 +2138,12 @@ async function verificarStatusAtivos() {
       }
     });
 
+    // Sempre atualiza tela e salva (mesmo sem mudanças, para garantir consistência)
+    atualizarDashboard();
+    renderPaginaAtiva();
     if (atualizados > 0) {
-      atualizarDashboard();
-      renderPaginaAtiva();
       salvarEstado();
-      addLog(`${atualizados} pedido${atualizados>1?'s':''} atualizado${atualizados>1?'s':''} pelo site`, 'success');
+      addLog(`${atualizados} pedido${atualizados>1?'s':''} expedido${atualizados>1?'s':''} pelo site`, 'success');
     }
 
   } catch(e) {
