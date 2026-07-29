@@ -508,10 +508,12 @@ const FERIADOS = ['2025-01-01','2025-04-18','2025-04-21','2025-05-01','2025-09-0
 
 // Mapa status site → etapa interna
 const STATUS_MAP = {
-  0:'separacao', 1:'separacao', 6:'separacao', 7:'separacao',
-  13:'bordado', 12:'embalagem',
-  3:'expedido', 4:'expedido', 5:'expedido',
-  2:'cancelado'
+  0:'separacao', 1:'separacao', 6:'separacao', 7:'separacao', 9:'separacao',
+  10:'separacao', 11:'separacao', 14:'separacao', 15:'separacao',
+  13:'bordado',
+  12:'embalagem',
+  3:'expedido', 4:'expedido', 5:'expedido', 8:'expedido',
+  2:'cancelado', 16:'cancelado', 17:'cancelado', 18:'cancelado'
 };
 
 // Mapa etapa interna → status Shoppub
@@ -678,7 +680,13 @@ function getCoresPijamas(items) {
 function processarPedido(p) {
   const id = String(p.id);
   const statusSite = p.status || 0;
-  const statusSiteLabel = {0:'Aberto',1:'Pago',2:'Cancelado',3:'Entregue',4:'Despachado',5:'NF Emitida',6:'Em Separação',7:'Em Produção',12:'Preparando Envio',13:'Em Customização'}[statusSite]||String(statusSite);
+  const statusSiteLabel = {
+    0:'Aberto', 1:'Pago', 2:'Cancelado', 3:'Entregue', 4:'Despachado',
+    5:'NF Emitida', 6:'Em Separação', 7:'Em Produção', 8:'Despachado',
+    9:'Em Produção', 10:'Em Produção', 11:'Pronto para Envio',
+    12:'Preparando Envio', 13:'Em Customização', 14:'Em Produção',
+    15:'Em Produção', 16:'Cancelado', 17:'Cancelado', 18:'Cancelado'
+  }[statusSite] || `Status ${statusSite}`;
 
   if (statusSite===2) return null;
 
@@ -1979,7 +1987,6 @@ async function carregarBanco() {
       STATE.pedidos.forEach(p => {
         const cache = STATE._etapasCache[p.id];
         if (cache) {
-          // Cache local prevalece se pedido foi movido além do banco
           const ordemEtapas = ['separacao','bordado','embalagem','etiqueta','expedido'];
           const idxBanco = ordemEtapas.indexOf(p.status);
           const idxCache = ordemEtapas.indexOf(cache.status);
@@ -1991,6 +1998,9 @@ async function carregarBanco() {
       });
       STATE._etapasCache = null;
     }
+
+    // Dispara verificação de status real dos pedidos ativos no site
+    verificarStatusAtivos();
 
     const ativos = STATE.pedidos.filter(p => !['expedido','cancelado'].includes(p.status)).length;
     addLog(`Banco: ${d.pedidos?.length||0} pedidos (${ativos} ativos)`, 'success');
@@ -2067,11 +2077,73 @@ function iniciarAutoSync() {
   }
 }
 
+// Verifica o status real dos pedidos ativos no site da Shoppub
+async function verificarStatusAtivos() {
+  try {
+    const ativos = STATE.pedidos.filter(p => !['expedido','cancelado'].includes(p.status));
+    if (!ativos.length) return;
+
+    // Pega os IDs dos pedidos ativos
+    const ids = ativos.map(p => p.numeroCompleto || p.id).slice(0, 50);
+
+    const res = await fetch(`${STATE.config.backend}/api/pedidos/status-check`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ ids }),
+      signal: AbortSignal.timeout(30000)
+    });
+
+    if (!res.ok) return;
+    const data = await res.json();
+    if (!data.sucesso) return;
+
+    let atualizados = 0;
+    data.pedidos.forEach(sitePedido => {
+      const statusSite = sitePedido.status || sitePedido.status_resumido || 0;
+      const interno = STATE.pedidos.find(p =>
+        String(p.id) === String(sitePedido.id) ||
+        p.numeroCompleto === sitePedido.shoppub_id
+      );
+      if (!interno) return;
+
+      // Atualiza status do site
+      interno.statusSite = statusSite;
+      interno.statusSiteLabel = {
+        3:'Entregue', 4:'Despachado', 5:'NF Emitida', 8:'Despachado',
+        2:'Cancelado', 12:'Preparando Envio', 13:'Em Customização'
+      }[statusSite] || String(statusSite);
+
+      // Se o site diz despachado/entregue → move para expedido
+      if ([3, 4, 5, 8].includes(statusSite) && interno.status !== 'expedido') {
+        interno.status = 'expedido';
+        addLog(`#${interno.numero} → expedido (site: ${interno.statusSiteLabel})`, 'info');
+        atualizados++;
+      } else if (statusSite === 2 && interno.status !== 'cancelado') {
+        interno.status = 'cancelado';
+        atualizados++;
+      }
+    });
+
+    if (atualizados > 0) {
+      atualizarDashboard();
+      renderPaginaAtiva();
+      salvarEstado();
+      addLog(`${atualizados} pedido${atualizados>1?'s':''} atualizado${atualizados>1?'s':''} pelo site`, 'success');
+    }
+
+  } catch(e) {
+    console.warn('verificarStatusAtivos:', e.message);
+  }
+}
+
 async function autoSyncCompleto() {
   try {
     setSyncStatus('saving', 'Sincronizando...');
 
-    // 1. Importa pedidos novos e verifica status do site
+    // 1. Verifica status real dos pedidos ativos no site
+    await verificarStatusAtivos();
+
+    // 2. Importa pedidos novos
     const res = await fetch(`${STATE.config.backend}/api/pedidos`);
     if (res.ok) {
       const data = await res.json();
@@ -2083,14 +2155,14 @@ async function autoSyncCompleto() {
       }
     }
 
-    // 2. Salva etapas atuais no banco
+    // 3. Salva no banco
     await salvarBanco();
 
-    // 3. Atualiza tela
+    // 4. Atualiza tela
     atualizarDashboard();
     renderPaginaAtiva();
     setSyncStatus('ok', `Sync ${new Date().toLocaleTimeString('pt-BR',{hour:'2-digit',minute:'2-digit'})}`);
-    document.getElementById('last-sync').textContent = `Sync automático: ${new Date().toLocaleTimeString('pt-BR')}`;
+    document.getElementById('last-sync').textContent = `Sync: ${new Date().toLocaleTimeString('pt-BR')}`;
 
   } catch(e) {
     setSyncStatus('error', 'Erro no sync');
