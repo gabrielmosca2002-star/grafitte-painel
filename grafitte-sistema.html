@@ -622,53 +622,51 @@ function parseBordado(items) {
     posicaoBordado: ''
   };
 
+  // Normaliza string: remove acentos para facilitar comparação
+  const norm = s => s.normalize('NFD').replace(/[\u0300-\u036f]/g,'').toLowerCase().replace(/\s+/g,' ').trim();
+
   items.forEach(i => {
-    const l = i.label.toLowerCase().replace(/\s+/g,' ').trim();
+    const l = norm(i.label);  // label normalizado sem acentos
+    const lOrig = i.label.toLowerCase().replace(/\s+/g,' ').trim(); // label original
     const v = i.valor.trim();
 
-    // Nome — "Bordado (Nome) - X" ou "Bordado do Nome Grátis - X"
+    // Limpa preço dos valores: "Fulano (+ R$14,90)" → "Fulano"
+    const vLimpo = v.replace(/\(\+\s*R\$[\d.,]+\)/g, '').trim();
+
+    // Nome — "Bordado do Nome Grátis" ou "Bordado (Nome)"
     if ((l.includes('bordado') && (l.includes('(nome)') || l.includes('do nome'))) ||
         l.startsWith('bordado (nome)')) {
-      // Remove preço do valor: "Fulano (+ R$14,90)" → "Fulano"
-      const vNome = v.replace(/\(\+\s*R\$[\d.,]+\)/g, '').trim();
-      if (vNome && !vNome.toLowerCase().includes('ficará') && !vNome.toLowerCase().includes('ficara')) {
-        b.nome = vNome; b.temBordado = true;
+      if (vLimpo && !vLimpo.toLowerCase().includes('ficar')) {
+        b.nome = vLimpo; b.temBordado = true;
       }
     }
-    // Profissão
-    else if (l.includes('profiss')) {
-      const vProf = v.replace(/\(\+\s*R\$[\d.,]+\)/g, '').trim();
-      if (vProf && !vProf.toLowerCase().includes('ficará') && !vProf.toLowerCase().includes('ficara') &&
-          !vProf.toLowerCase().includes('abaixo') && vProf.length > 1) {
-        b.profissao = vProf; b.temBordado = true;
+    // Profissão — "Bordado Profissão Grátis" ou "PROFISSÃO (*Ficará abaixo...)"
+    else if (l.includes('profiss') && !l.includes('bras')) {
+      if (vLimpo && !vLimpo.toLowerCase().includes('ficar') &&
+          !vLimpo.toLowerCase().includes('abaixo') && vLimpo.length > 1) {
+        b.profissao = vLimpo; b.temBordado = true;
       }
     }
-    // Tipografia / Fonte
+    // Tipografia
     else if (l.includes('tipografia') || l.includes('fonte')) {
-      if (v) b.tipografia = v;
+      if (vLimpo) b.tipografia = vLimpo;
     }
     // Cor da letra
     else if (l.includes('cor da letr') || l.includes('cor letra')) {
-      if (v) b.cor = v;
+      if (vLimpo) b.cor = vLimpo;
     }
-    // Brasão — "Bordado do brasão do seu curso ou profissão - Enfermeira"
-    // O valor pode ser: "Sim", nome da profissão/curso, ou vazio
-    else if (l.includes('bras') && (l.includes('curso') || l.includes('profiss'))) {
-      // Limpa o valor: remove preço "(+ R$39,90)" e texto extra
-      const vLimpo = v.replace(/\(\+\s*R\$[\d.,]+\)/g, '').trim();
-      const naoTemBrasao = ['não','nao','','–','—','-','false','0'].includes(vLimpo.toLowerCase());
-      if (vLimpo && !naoTemBrasao) {
+    // Brasão — "Bordado do brasão do seu curso ou profissão"
+    // Normalizado: "bordado do brasao do seu curso ou profissao"
+    else if ((l.includes('bras') || l.includes('brasao')) && (l.includes('curso') || l.includes('profiss'))) {
+      const naoTem = ['não','nao','','–','—','-','false','0','nenhum'].includes(vLimpo.toLowerCase());
+      if (vLimpo && !naoTem) {
         b.logo = vLimpo;
         b.temBordado = true;
       }
     }
-    // Posição do bordado / brasão
-    else if (l.includes('posi') && (l.includes('bras') || l.includes('bordado'))) {
-      if (v) b.posicaoLogo = v;
-    }
-    // Posição do nome/bordado geral
-    else if (l.includes('posi') && !b.posicaoLogo) {
-      if (v) b.posicaoBordado = v;
+    // Posição do bordado/brasão — "Escolha a posição do bordado - Brasão"
+    else if (l.includes('posic') || l.includes('posicao') || l.includes('posi')) {
+      if (vLimpo) b.posicaoLogo = vLimpo;
     }
   });
 
